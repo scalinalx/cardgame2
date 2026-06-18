@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Siege of Hogwarts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *{ box-sizing:border-box; }
+  :root{
+    --gold:#e0a92e; --gold-dim:rgba(224,169,46,.45);
+    --lion:#c01f33; --eagle:#2a4f96; --enemy:#7bc15a;
+    --ink:#e9e2d2; --line:rgba(255,255,255,.10);
+  }
+  html,body{ margin:0; height:100%; background:#06070a; font-family:'Barlow Semi Condensed',sans-serif; color:var(--ink); overflow:hidden; }
+  .viewport{ position:fixed; inset:0; overflow:hidden; background:radial-gradient(120% 100% at 50% 0%, #15121d, #07080b 70%); }
+  .app{ width:1360px; height:840px; position:absolute; left:50%; top:50%; transform-origin:center center; display:grid;
+    grid-template-rows:76px 1fr 134px; grid-template-columns:226px 1fr 248px;
+    grid-template-areas:"top top top" "left board right" "tray tray tray"; gap:12px; padding:14px; }
+  .ph{ background:repeating-linear-gradient(135deg, rgba(255,255,255,.06) 0 6px, rgba(255,255,255,0) 6px 12px), var(--c,#232838); }
+
+  /* ===== TOP BAR ===== */
+  .top{ grid-area:top; display:flex; align-items:center; gap:16px; }
+  .faction{ display:flex; align-items:center; gap:11px; width:30%; }
+  .faction.right{ justify-content:flex-end; }
+  .sigil{ width:46px; height:46px; border-radius:50%; display:grid; place-items:center; flex:none; font-family:'Cinzel',serif; font-weight:800; }
+  .sigil.dark{ border:2px solid rgba(123,193,90,.45); box-shadow:0 0 22px rgba(123,193,90,.4); --c:#16210f; font-size:8px; color:rgba(255,255,255,.5); }
+  .sigil.hog{ border-radius:8px 8px 12px 12px; clip-path:polygon(0 0,100% 0,100% 64%,50% 100%,0 64%); background:linear-gradient(160deg,#caa044,#7c5e1f); color:#1a160c; font-size:19px; box-shadow:0 0 18px rgba(224,169,46,.3); }
+  .meter{ flex:1; min-width:0; }
+  .meter .r{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:5px; }
+  .meter .lab{ font-family:'Cinzel',serif; font-size:11px; letter-spacing:.08em; }
+  .meter .val{ font-size:21px; font-weight:700; }
+  .bar{ height:11px; border-radius:6px; background:rgba(255,255,255,.1); position:relative; overflow:hidden; box-shadow:inset 0 1px 3px rgba(0,0,0,.5); }
+  .bar>span{ position:absolute; inset:0 auto 0 0; border-radius:6px; transition:width .5s ease; }
+  .bar .th{ position:absolute; top:-2px; bottom:-2px; width:2px; background:#fff; opacity:.5; }
+  .ward-fill{ background:linear-gradient(90deg,#d99a25,#f4d27a); box-shadow:0 0 12px rgba(231,162,58,.55); }
+  .morale-fill{ background:linear-gradient(90deg,#2c6e2a,#6fbf3f); box-shadow:0 0 12px rgba(95,168,58,.5); }
+  .muster{ flex:1; display:flex; flex-direction:column; align-items:center; gap:5px; }
+  .turn-pill{ font-family:'Cinzel',serif; font-size:12px; letter-spacing:.1em; color:#f0e2bb; border:1px solid var(--gold-dim); border-radius:20px; padding:3px 15px; background:rgba(20,16,8,.55); white-space:nowrap; }
+  .q{ display:flex; align-items:center; gap:6px; }
+  .q .ql{ font-size:9px; letter-spacing:.13em; text-transform:uppercase; color:#9fbf8c; }
+  .qfig{ width:26px; height:30px; border-radius:6px; --c:#1b2a16; border:1.5px solid rgba(123,193,90,.5); position:relative; box-shadow:0 2px 6px rgba(0,0,0,.5); }
+  .qfig .a{ position:absolute; right:-4px; bottom:-4px; width:15px; height:15px; border-radius:50%; background:#b23b2e; color:#fff; font-size:8px; font-weight:700; display:grid; place-items:center; border:1px solid rgba(0,0,0,.4); }
+
+  /* ===== RAILS ===== */
+  .rail{ border-radius:14px; background:linear-gradient(180deg, rgba(20,23,30,.92), rgba(13,15,20,.92)); border:1px solid var(--line); padding:13px; display:flex; flex-direction:column; gap:12px; overflow:hidden; }
+  .left{ grid-area:left; } .right{ grid-area:right; }
+  .rail h3{ font-family:'Cinzel',serif; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:#b8c2d0; margin:0; }
+  .divider{ height:1px; background:var(--line); }
+  .phases{ display:flex; gap:6px; }
+  .phase{ flex:1; text-align:center; font-size:9px; letter-spacing:.05em; text-transform:uppercase; padding:5px 2px; border-radius:7px; background:rgba(255,255,255,.04); color:#7e879a; border:1px solid transparent; }
+  .phase.on{ background:rgba(224,169,46,.14); border-color:var(--gold-dim); color:#f0e2bb; }
+  .legend{ display:flex; flex-direction:column; gap:7px; font-size:11px; }
+  .legend .li{ display:flex; align-items:center; gap:8px; color:#c8c2b0; white-space:nowrap; }
+  .legend i{ width:12px; height:12px; border-radius:3px; flex:none; }
+  .lg-you{ background:var(--gold); } .lg-foe{ background:var(--enemy); }
+  .log{ flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:6px; padding-right:2px; }
+  .log .e{ font-family:'EB Garamond',serif; font-size:12.5px; line-height:1.25; color:#c8c0ac; display:flex; gap:7px; align-items:baseline; }
+  .log .e b{ color:#efe3c4; }
+  .log .e i{ width:6px; height:6px; border-radius:50%; flex:none; transform:translateY(-1px); }
+  .d-gold{ background:var(--gold);} .d-foe{ background:var(--enemy);} .d-red{ background:#d9603c;} .d-eagle{ background:#5a8cd0;}
+  .log::-webkit-scrollbar{ width:5px; } .log::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.15); border-radius:3px; }
+  .ins-empty{ font-family:'EB Garamond',serif; font-size:12.5px; color:#808898; line-height:1.4; }
+  .ins-top{ display:flex; gap:11px; align-items:center; }
+  .ins-art{ width:54px; height:60px; border-radius:9px; --c:#1a1f2e; flex:none; display:grid; place-items:center; font-size:8px; color:rgba(255,255,255,.4); }
+  .ins-name{ font-family:'Cinzel',serif; font-size:16px; color:#f0ead9; }
+  .ins-type{ font-size:10px; letter-spacing:.1em; text-transform:uppercase; margin:2px 0 5px; }
+  .ins-stats{ display:flex; gap:6px; align-items:center; }
+  .ins-ab{ font-family:'EB Garamond',serif; font-size:13px; color:#c8c0ac; line-height:1.35; }
+  .kw{ display:flex; gap:6px; flex-wrap:wrap; }
+  .kw span{ font-size:8.5px; letter-spacing:.08em; text-transform:uppercase; color:#9aa4b2; border:1px solid rgba(255,255,255,.18); border-radius:10px; padding:2px 8px; }
+  .ench{ display:flex; align-items:center; gap:8px; font-size:11px; color:#bdeee7; background:rgba(63,163,155,.14); border:1px solid rgba(63,163,155,.4); border-radius:8px; padding:5px 9px; }
+  .ench.gold{ color:#f3d9a6; background:rgba(217,155,52,.14); border-color:rgba(217,155,52,.45); }
+
+  /* ===== BOARD (painterly map) ===== */
+  .board{ grid-area:board; position:relative; border-radius:16px; overflow:hidden; border:1px solid var(--line); box-shadow:inset 0 0 110px 18px rgba(0,0,0,.45); }
+  .map{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+  .forestdark{ position:absolute; left:0; right:0; top:0; height:32%; pointer-events:none; z-index:2; transition:opacity .6s; background:linear-gradient(180deg, rgba(6,14,6,.85), rgba(6,14,6,0)); }
+  .vig{ position:absolute; inset:0; pointer-events:none; z-index:3; box-shadow:inset 0 0 140px 30px rgba(0,0,0,.5); }
+  .flash{ position:absolute; inset:0; pointer-events:none; z-index:9; background:radial-gradient(120% 90% at 50% 100%, rgba(200,40,20,.55), transparent 60%); opacity:0; }
+  .flash.on{ animation:flash .7s ease; }
+  @keyframes flash{ 0%{opacity:0;} 25%{opacity:1;} 100%{opacity:0;} }
+
+  .region{ position:absolute; transform:translate(-50%,-50%); z-index:5; display:flex; flex-direction:column; align-items:center; gap:5px; width:190px; }
+  .rl{ font-family:'Cinzel',serif; font-size:10px; letter-spacing:.04em; color:#f3e7c8; white-space:nowrap; background:rgba(8,7,4,.66); border:1px solid rgba(224,169,46,.3); border-radius:11px; padding:2px 10px; backdrop-filter:blur(3px); }
+  .region.foe .rl{ color:#d7f0c5; border-color:rgba(123,193,90,.4); background:rgba(6,12,4,.66); }
+  .cluster{ display:flex; flex-wrap:wrap; gap:5px 6px; justify-content:center; max-width:190px; padding:8px; border-radius:16px; transition:background .2s, box-shadow .2s; }
+  .region.hot .cluster{ background:rgba(255,217,138,.12); box-shadow:0 0 0 2px rgba(255,217,138,.6), 0 0 22px rgba(255,217,138,.4); cursor:pointer; }
+  .region.empty .cluster{ min-width:64px; min-height:48px; }
+  .region.hot.empty .cluster{ border:2px dashed rgba(255,217,138,.7); }
+
+  .fig{ width:48px; height:56px; border-radius:9px; position:relative; border:2px solid var(--uc); box-shadow:0 5px 12px rgba(0,0,0,.55); cursor:pointer; animation:figin .4s ease; }
+  @keyframes figin{ from{ opacity:0; transform:translateY(-10px) scale(.85);} to{ opacity:1; transform:none; } }
+  .fig .ulab{ position:absolute; inset:0; display:grid; place-items:center; border-radius:7px; color:rgba(255,255,255,.62); font-size:7.5px; text-align:center; line-height:1.05; padding:2px; font-weight:600; }
+  .fig .pips{ position:absolute; left:50%; bottom:-8px; transform:translateX(-50%); display:flex; gap:3px; }
+  .pip{ min-width:17px; height:17px; border-radius:5px; font-size:11px; font-weight:700; color:#fff; display:grid; place-items:center; border:1px solid rgba(0,0,0,.45); padding:0 2px; }
+  .pip.atk{ background:#c9603f; } .pip.hp{ background:#3a7d4e; }
+  .fig.sel{ box-shadow:0 0 0 3px rgba(255,217,138,.75), 0 5px 12px rgba(0,0,0,.55); }
+  .fig.glow{ box-shadow:0 0 0 3px rgba(255,110,100,.85), 0 5px 12px rgba(0,0,0,.55); }
+  .fig.dim{ opacity:.4; }
+  .intent{ position:absolute; left:50%; top:-11px; transform:translateX(-50%); white-space:nowrap; padding:1px 6px; border-radius:8px; font-size:8px; font-weight:700; color:#fff; border:1px solid rgba(255,255,255,.3); box-shadow:0 2px 5px rgba(0,0,0,.5); z-index:3; }
+  .more{ align-self:center; font-size:11px; font-weight:700; color:#e9e2d2; background:rgba(0,0,0,.5); border-radius:9px; padding:4px 8px; border:1px solid rgba(255,255,255,.2); }
+
+  .march{ position:absolute; z-index:4; pointer-events:none; }
+  .march span{ color:rgba(150,255,130,.55); font-size:15px; }
+
+  .hint{ position:absolute; left:50%; bottom:12px; transform:translateX(-50%); z-index:20; display:flex; align-items:center; gap:12px; background:rgba(12,10,6,.94); border:1px solid var(--gold-dim); border-radius:24px; padding:8px 9px 8px 16px; box-shadow:0 8px 24px rgba(0,0,0,.6); }
+  .hint span{ font-family:'Cinzel',serif; font-size:12px; color:#f0e2bb; }
+  .hint button{ background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.22); color:#e9e2d2; border-radius:16px; padding:5px 13px; font-size:11px; cursor:pointer; font-family:'Barlow Semi Condensed',sans-serif; }
+
+  /* ===== TRAY ===== */
+  .tray{ grid-area:tray; display:flex; align-items:center; gap:16px; background:linear-gradient(180deg,#0d0f14,#08090c); border:1px solid var(--line); border-radius:14px; padding:0 16px; }
+  .pod{ display:flex; align-items:center; gap:10px; flex:none; }
+  .crest{ width:42px; height:50px; display:grid; place-items:center; font-family:'Cinzel',serif; font-weight:800; font-size:18px; color:#fff; clip-path:polygon(0 0,100% 0,100% 64%,50% 100%,0 64%); }
+  .pod-nm{ font-family:'Cinzel',serif; font-size:12px; }
+  .mana{ display:flex; gap:3px; align-items:center; margin-top:4px; }
+  .cry{ width:12px; height:15px; clip-path:polygon(50% 0,100% 35%,80% 100%,20% 100%,0 35%); background:#2a3550; }
+  .cry.on{ background:linear-gradient(#7fb6ff,#3f7de0); box-shadow:0 0 6px rgba(80,150,255,.7); }
+  .mnum{ font-size:12px; font-weight:700; color:#bcd4ff; margin-left:5px; }
+  .piles{ display:flex; gap:10px; margin-top:5px; }
+  .pile{ display:flex; align-items:center; gap:4px; font-size:9px; letter-spacing:.05em; color:#9fb0c4; }
+  .pile b{ width:10px; height:13px; border-radius:2px; background:#2a3550; border:1px solid rgba(255,255,255,.25); }
+  .pile b.disc{ background:#3a2a2a; }
+  .hand{ flex:1; display:flex; gap:9px; justify-content:center; align-items:flex-end; }
+  .card{ width:78px; height:108px; border-radius:9px; background:linear-gradient(#1c2030,#141826); border:1px solid rgba(255,255,255,.13); position:relative; box-shadow:0 7px 16px rgba(0,0,0,.55); overflow:hidden; cursor:pointer; transition:transform .12s, box-shadow .12s; }
+  .card:hover{ transform:translateY(-8px); }
+  .card.armed{ transform:translateY(-12px); box-shadow:0 0 0 2px #ffd98a, 0 0 20px rgba(255,217,138,.5); }
+  .card.dim{ opacity:.45; } .card.poor{ opacity:.5; cursor:not-allowed; }
+  .card .strip{ height:5px; }
+  .card .cost{ position:absolute; top:6px; left:6px; width:20px; height:20px; border-radius:50%; background:radial-gradient(circle at 35% 30%,#3a4a6e,#1a2236); color:#cfe0ff; font-size:12px; font-weight:700; display:grid; place-items:center; border:1px solid rgba(150,180,255,.4); z-index:2; }
+  .card .cart{ position:absolute; top:22px; left:7px; right:7px; height:40px; border-radius:4px; --c:#1a1f2e; }
+  .card .cnm{ position:absolute; bottom:16px; left:0; right:0; text-align:center; font-family:'Cinzel',serif; font-size:8.5px; color:#f0ead9; padding:0 3px; }
+  .card .ctag{ position:absolute; bottom:5px; left:0; right:0; text-align:center; font-size:7px; letter-spacing:.1em; text-transform:uppercase; color:rgba(233,226,210,.5); }
+  .endturn{ flex:none; background:linear-gradient(#7a1422,#4e0c16); color:#ffd9b0; font-family:'Cinzel',serif; font-weight:700; border:1px solid #b3122a; border-radius:10px; padding:12px 18px; font-size:13px; letter-spacing:.05em; line-height:1.15; text-align:center; box-shadow:0 0 18px rgba(179,18,42,.4); cursor:pointer; }
+  .endturn:hover{ background:linear-gradient(#8d1828,#5c0f1a); }
+  .endturn small{ display:block; font-size:9px; font-weight:500; color:#e7b9a0; margin-top:2px; }
+
+  .over{ position:fixed; inset:0; z-index:50; display:grid; place-items:center; background:rgba(5,6,9,.86); backdrop-filter:blur(3px); }
+  .over h1{ font-family:'Cinzel',serif; font-size:54px; margin:0 0 8px; letter-spacing:.04em; text-align:center; }
+  .over p{ font-family:'EB Garamond',serif; font-size:18px; color:#c8c0ac; margin:0 0 22px; text-align:center; }
+  .over button{ display:block; margin:0 auto; background:linear-gradient(#7a1422,#4e0c16); color:#ffd9b0; font-family:'Cinzel',serif; font-weight:700; border:1px solid #b3122a; border-radius:10px; padding:12px 26px; font-size:15px; cursor:pointer; letter-spacing:.05em; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useLayoutEffect } = React;
+
+// regions placed on the painterly map (% of board). Enemies muster at the treeline and pour down.
+const REGIONS = [
+  { id:'forest', name:'The Treeline — Dark Army musters', side:'enemy', x:50, y:12 },
+  { id:'pitch',  name:'Quidditch Pitch',   side:'play', x:19, y:42 },
+  { id:'bridge', name:'The Covered Bridge', side:'play', x:50, y:46 },
+  { id:'hagrid', name:"Hagrid's Grounds",   side:'play', x:81, y:40 },
+  { id:'court',  name:'The Courtyard',      side:'play', x:50, y:66 },
+  { id:'gate',   name:'The Great Gate',     side:'play', x:50, y:84 },
+];
+const RMAP = Object.fromEntries(REGIONS.map(r=>[r.id,r]));
+const GROUNDS = ['pitch','bridge','hagrid'];
+function enemyRegion(e){ return e.step===0 ? 'forest' : e.step===1 ? GROUNDS[e.lane] : e.step===2 ? 'court' : 'gate'; }
+const MAX_SHOWN = 6;
+
+const POOL = [
+  { name:'Acromantula', atk:5, hp:3, uc:'#6fae3a', intent:'STRIKE', ab:'A giant spider. Strikes the nearest defender as it scuttles forward.' },
+  { name:'Dementor', atk:3, hp:5, uc:'#5a7d8c', intent:'DRAIN', ab:'Drains hope, weakening a defender in its region.' },
+  { name:'Snatcher', atk:4, hp:3, uc:'#7b4fb0', intent:'ADVANCE', ab:'A dark wizard pressing toward the castle.' },
+  { name:'Mountain Troll', atk:7, hp:7, uc:'#8a7a3a', intent:'SMASH', ab:'Slow and devastating. Heavy damage to walls and defenders.' },
+  { name:'Werewolf', atk:6, hp:4, uc:'#9a6a3a', intent:'ADVANCE', ab:'Savage and fast, loping a region closer each turn.' },
+  { name:'Inferius', atk:2, hp:6, uc:'#4a6a5a', intent:'ADVANCE', ab:'A reanimated corpse — relentless and hard to put down.' },
+];
+const INTENT_C = { STRIKE:'#b23b2e', DRAIN:'#3f7d8c', ADVANCE:'#4a6a30', SMASH:'#8a5a2a' };
+let UID = 200; const uid = ()=> 'u'+(UID++);
+const mkFoe = (tmpl, step, lane)=> ({ id:uid(), side:'enemy', step, lane, name:tmpl.name, atk:tmpl.atk, hp:tmpl.hp, uc:tmpl.uc, intent:tmpl.intent, type:'Dark Army', ab:tmpl.ab });
+
+const START_UNITS = [
+  { id:'a1', side:'ally', region:'gate', name:'Stag Patronus', atk:3, hp:5, uc:'var(--lion)', type:'Ally · Charm', ab:'Guardian. Repels Dementors in its region; nearby allies take less damage.' },
+  { id:'a2', side:'ally', region:'gate', name:'Sentinel', atk:2, hp:4, uc:'var(--eagle)', type:'Ally', ab:'Holds the line, blocking advancing foes.' },
+  { id:'a3', side:'ally', region:'bridge', name:'Duellist', atk:4, hp:3, uc:'var(--lion)', type:'Ally', ab:'Strikes first when a foe enters its region.' },
+  mkFoe(POOL[0],1,1), mkFoe(POOL[4],1,2),
+  mkFoe(POOL[2],0,0), mkFoe(POOL[1],0,1),
+];
+const START_HAND = [
+  { id:'c1', name:'Stag Patronus', cost:3, kind:'ally', atk:3, hp:5, uc:'var(--lion)', color:'#d99b34', tag:'Ally · Charm', ab:'Summon a 3/5 Guardian into a region.' },
+  { id:'c2', name:'House Duellist', cost:2, kind:'ally', atk:4, hp:2, uc:'var(--lion)', color:'#d99b34', tag:'Ally', ab:'Summon a 4/2 fighter that strikes first.' },
+  { id:'c3', name:'Cornish Pixies', cost:1, kind:'ally', atk:1, hp:1, uc:'#2a8fb0', color:'#d99b34', tag:'Ally · Swarm', ab:'Summon a quick 1/1 nuisance to clog a region.' },
+  { id:'c4', name:'Stupefy', cost:2, kind:'spell', color:'#8f6ad6', tag:'Spell · Instant', ab:'Deal 4 damage to one foe and stun it.' },
+  { id:'c5', name:'Protego Maxima', cost:4, kind:'ench', atk:0, hp:6, uc:'#3fa39b', color:'#3fa39b', tag:'Enchantment · Barrier', ab:'Raise a 0/6 barrier in a region to soak the Dark Army.' },
+];
+const START_QUEUE = [ POOL[3], POOL[2], POOL[0], POOL[5] ];
+
+// draw pile — End Turn refills the hand to 5 from these
+const DECK = [
+  { name:'Stag Patronus', cost:3, kind:'ally', atk:3, hp:5, uc:'var(--lion)', color:'#d99b34', tag:'Ally · Charm', ab:'Summon a 3/5 Guardian into a region.' },
+  { name:'House Duellist', cost:2, kind:'ally', atk:4, hp:2, uc:'var(--lion)', color:'#d99b34', tag:'Ally', ab:'Summon a 4/2 fighter that strikes first.' },
+  { name:'Cornish Pixies', cost:1, kind:'ally', atk:1, hp:1, uc:'#2a8fb0', color:'#d99b34', tag:'Ally · Swarm', ab:'A quick 1/1 nuisance to clog a region.' },
+  { name:'Expelliarmus', cost:1, kind:'spell', uc:'#8f6ad6', color:'#8f6ad6', tag:'Spell · Instant', ab:'Deal 4 damage to one foe and disarm it.' },
+  { name:'Reducto', cost:3, kind:'spell', uc:'#8f6ad6', color:'#8f6ad6', tag:'Spell · Blast', ab:'Deal 4 damage to one foe.' },
+  { name:'Protego Maxima', cost:4, kind:'ench', atk:0, hp:6, uc:'#3fa39b', color:'#3fa39b', tag:'Enchantment · Barrier', ab:'Raise a 0/6 barrier in a region.' },
+  { name:'Order Champion', cost:5, kind:'ally', atk:6, hp:6, uc:'var(--eagle)', color:'#d99b34', tag:'Ally · Legend', ab:'A mighty 6/6 protector of the Order.' },
+];
+let CID = 500; const drawCard = ()=>{ const t=DECK[Math.floor(Math.random()*DECK.length)]; return {...t, id:'c'+(CID++)}; };
+
+function Fig({ u, selected, glow, dim, onClick }){
+  return (
+    <div className={"fig ph"+(selected?' sel':'')+(glow?' glow':'')+(dim?' dim':'')} style={{ '--uc':u.uc, '--c':'#222633' }} onClick={onClick}>
+      {u.side==='enemy' && u.intent && <div className="intent" style={{ background:INTENT_C[u.intent]||'#b23b2e' }}>{u.intent}</div>}
+      <div className="ulab ph">{u.name}</div>
+      <div className="pips"><span className="pip atk">{u.atk}</span><span className="pip hp">{u.hp}</span></div>
+    </div>
+  );
+}
+function Meter({ side, lab, val, color, fill }){
+  return (
+    <div className={"faction"+(side==='right'?' right':'')}>
+      {side==='left' && <div className="sigil dark">DARK<br/>LORD</div>}
+      <div className="meter">
+        <div className="r"><span className="lab" style={{color}}>{lab}</span><span className="val" style={{color}}>{Math.round(val)}%</span></div>
+        <div className="bar"><span className={fill} style={{width:val+'%'}}></span><span className="th" style={{left:'30%'}}></span></div>
+      </div>
+      {side==='right' && <div className="sigil hog">H</div>}
+    </div>
+  );
+}
+
+function App(){
+  const [units, setUnits] = useState(START_UNITS);
+  const [hand, setHand] = useState(START_HAND);
+  const [queue, setQueue] = useState(START_QUEUE);
+  const [mana, setMana] = useState({ cur:4, max:5 });
+  const [placing, setPlacing] = useState(null);
+  const [inspect, setInspect] = useState({ id:'a1' });
+  const [log, setLog] = useState([['d-foe', <span>The siege begins. Voldemort’s army gathers beyond the treeline.</span>]]);
+  const [ward, setWard] = useState(84);
+  const [morale, setMorale] = useState(76);
+  const [turn, setTurn] = useState(1);
+  const [over, setOver] = useState(null);
+  const [flash, setFlash] = useState(false);
+  const [scale, setScale] = useState(1);
+  const vpRef = useRef(null);
+
+  useLayoutEffect(()=>{
+    let stop=false, frames=0;
+    const measure = ()=>{ const el=vpRef.current; const w=(el&&el.clientWidth)||document.documentElement.clientWidth; const h=(el&&el.clientHeight)||document.documentElement.clientHeight; if(w&&h) setScale(Math.min(w/1388, h/868, 1)); };
+    const loop = ()=>{ if(stop) return; measure(); if(frames++<30) requestAnimationFrame(loop); };
+    loop(); window.addEventListener('resize', measure);
+    let ro; try{ ro=new ResizeObserver(measure); if(vpRef.current) ro.observe(vpRef.current); ro.observe(document.documentElement); }catch(e){}
+    return ()=>{ stop=true; window.removeEventListener('resize', measure); if(ro) ro.disconnect(); };
+  },[]);
+  useEffect(()=>{ if(over) return; if(ward<30) setOver('defeat'); else if(morale<30) setOver('victory'); },[ward,morale]);
+
+  const occ = (rid)=> units.filter(u=> u.side==='ally' ? u.region===rid : enemyRegion(u)===rid );
+  const hordeSize = units.filter(u=>u.side==='enemy' && u.step<=1).length + queue.length;
+
+  function pushLog(arr){ setLog(l=>[...arr, ...l].slice(0,16)); }
+  function pickCard(c){ setInspect({ card:c.id }); setPlacing(p=> p && p.id===c.id ? null : c); }
+
+  function deploy(r){
+    if(!placing || (placing.kind!=='ally' && placing.kind!=='ench') || r.side!=='play' || placing.cost>mana.cur) return;
+    setUnits(u=>[...u, { id:uid(), side:'ally', region:r.id, name:placing.name, atk:placing.atk||0, hp:placing.hp, uc:placing.uc, type:placing.tag, ab:placing.ab }]);
+    setHand(h=>h.filter(x=>x.id!==placing.id));
+    setMana(m=>({ ...m, cur:m.cur-placing.cost }));
+    pushLog([['d-gold', <span><b>{placing.name}</b> deployed to {r.name.split(' — ')[0]}.</span>]]);
+    setInspect({}); setPlacing(null);
+  }
+  function castOn(e){
+    if(!placing || placing.kind!=='spell' || e.side!=='enemy' || placing.cost>mana.cur) return;
+    const dead = e.hp-4<=0;
+    setUnits(us=> us.map(x=> x.id===e.id?{...x,hp:x.hp-4}:x).filter(x=> x.id!==e.id || x.hp-4>0));
+    setHand(h=>h.filter(x=>x.id!==placing.id));
+    setMana(m=>({ ...m, cur:m.cur-placing.cost }));
+    if(dead) setMorale(mo=>Math.max(0,mo-8));
+    pushLog([['d-gold', <span><b>{placing.name}</b> blasts {e.name} for 4{dead?' — destroyed!':'.'}</span>]]);
+    setInspect({}); setPlacing(null);
+  }
+
+  function endTurn(){
+    if(over) return;
+    let ev=[]; let nWard=ward, nMorale=morale;
+    let allies = units.filter(u=>u.side==='ally').map(u=>({...u}));
+    let foes = units.filter(u=>u.side==='enemy').map(u=>({...u}));
+    let q = [...queue];
+
+    // 1) muster queue feeds DIRECT spawns into the treeline (up to 2, where there's room)
+    let spawned=0;
+    while(q.length && spawned<2){
+      const tmpl=q.shift();
+      const lane=[0,1,2].sort(()=>Math.random()-.5).find(l=> foes.filter(f=>f.step===0 && f.lane===l).length < 2) ?? Math.floor(Math.random()*3);
+      foes.push(mkFoe(tmpl,0,lane)); spawned++;
+      ev.push(['d-foe', <span>A <b>{tmpl.name}</b> emerges from the forest.</span>]);
+    }
+    while(q.length<4) q.push(POOL[Math.floor(Math.random()*POOL.length)]);
+
+    // 2) advance every foe one region toward the castle
+    foes.forEach(f=> f.step+=1);
+    // 3) foes past the gate strike the Ward
+    foes = foes.filter(f=>{ if(f.step>3){ nWard=Math.max(0,nWard-f.atk); ev.push(['d-red', <span><b>{f.name}</b> breaches the Gate — Ward −{f.atk}%</span>]); return false; } return true; });
+    // 4) combat in each contested region
+    REGIONS.filter(r=>r.side==='play').forEach(r=>{
+      let na=allies.filter(a=>a.region===r.id && a.hp>0);
+      let nf=foes.filter(f=>enemyRegion(f)===r.id && f.hp>0);
+      let i=0; while(na[i]&&nf[i]){ na[i].hp-=nf[i].atk; nf[i].hp-=na[i].atk; i++; }
+      if(na.length&&nf.length) ev.push(['d-eagle', <span>Battle rages at <b>{r.name.split(' — ')[0]}</b>.</span>]);
+    });
+    // 5) casualties
+    allies.forEach(a=>{ if(a.hp<=0) ev.push(['d-red', <span><b>{a.name}</b> falls.</span>]); });
+    foes.forEach(f=>{ if(f.hp<=0){ nMorale=Math.max(0,nMorale-8); ev.push(['d-foe', <span><b>{f.name}</b> destroyed — Morale −8%</span>]); } });
+    allies=allies.filter(a=>a.hp>0); foes=foes.filter(f=>f.hp>0);
+
+    if(nWard<ward){ setFlash(true); setTimeout(()=>setFlash(false),700); }
+    setUnits([...allies,...foes]); setQueue(q); setWard(nWard); setMorale(nMorale);
+    setMana(m=>({ ...m, cur:m.max })); setTurn(t=>t+1); setInspect({}); setPlacing(null);
+    setHand(h=>{ const nh=[...h]; while(nh.length<5) nh.push(drawCard()); return nh; });
+    pushLog([['d-gold', <span><b>Turn {turn+1}.</b> The Dark Army surges; your mana is restored.</span>], ...ev]);
+  }
+
+  function reset(){ UID=200; setUnits(START_UNITS); setHand(START_HAND); setQueue(START_QUEUE); setMana({cur:4,max:5}); setWard(84); setMorale(76); setTurn(1); setOver(null); setInspect({id:'a1'}); setPlacing(null); setLog([['d-foe',<span>The siege begins anew.</span>]]); }
+
+  const insU = inspect.id ? units.find(x=>x.id===inspect.id) : null;
+  const insC = inspect.card ? hand.find(x=>x.id===inspect.card) : null;
+  const ins = insU || insC;
+
+  return (
+    <div className="viewport" ref={vpRef}>
+      <div className="app" style={{ transform:`translate(-50%,-50%) scale(${scale})` }} onClick={()=>{ if(placing) setPlacing(null); }}>
+
+        {/* TOP BAR */}
+        <div className="top">
+          <Meter side="left" lab="DARK ARMY MORALE" val={morale} color="#8fd06a" fill="morale-fill" />
+          <div className="muster">
+            <div className="turn-pill">TURN {turn} · YOUR MOVE</div>
+            <div className="q"><span className="ql">Mustering ▸</span>{queue.slice(0,4).map((t,i)=>(<div className="qfig ph" key={i}><div className="a">{t.atk}</div></div>))}</div>
+          </div>
+          <Meter side="right" lab="HOGWARTS WARD" val={ward} color="#f4d27a" fill="ward-fill" />
+        </div>
+
+        {/* LEFT RAIL */}
+        <div className="rail left" onClick={e=>e.stopPropagation()}>
+          <h3>Phase</h3>
+          <div className="phases"><div className="phase on">Deploy</div><div className="phase on">Cast</div><div className="phase">Resolve</div></div>
+          <div className="divider"></div>
+          <h3>The Field</h3>
+          <div className="legend"><div className="li"><i className="lg-you"></i>Your forces</div><div className="li"><i className="lg-foe"></i>The Dark Army</div></div>
+          <div className="divider"></div>
+          <h3>Battle Log</h3>
+          <div className="log">{log.map((e,i)=>(<div className="e" key={i}><i className={e[0]}></i><span>{e[1]}</span></div>))}</div>
+        </div>
+
+        {/* BOARD — painterly map */}
+        <div className="board">
+          <svg className="map" viewBox="0 0 880 600" preserveAspectRatio="xMidYMid slice">
+            <defs>
+              <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#2e1f5e"/><stop offset="40%" stopColor="#7b3f86"/><stop offset="74%" stopColor="#d8654a"/><stop offset="100%" stopColor="#f0a85e"/></linearGradient>
+              <radialGradient id="sun" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="#ffe7ad"/><stop offset="40%" stopColor="#ffd58a" stopOpacity="0.6"/><stop offset="100%" stopColor="#ffd58a" stopOpacity="0"/></radialGradient>
+              <linearGradient id="h1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#4c7a48"/><stop offset="100%" stopColor="#3a6238"/></linearGradient>
+              <linearGradient id="h2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#5d934f"/><stop offset="100%" stopColor="#3f6e3a"/></linearGradient>
+              <linearGradient id="h3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#6fa64f"/><stop offset="100%" stopColor="#477a3a"/></linearGradient>
+              <linearGradient id="lake" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#6fd6d0"/><stop offset="55%" stopColor="#2fb0bd"/><stop offset="100%" stopColor="#1d7f93"/></linearGradient>
+              <linearGradient id="rock" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#3f4a3c"/><stop offset="100%" stopColor="#26301f"/></linearGradient>
+              <linearGradient id="cas" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#7d8a86"/><stop offset="100%" stopColor="#46524d"/></linearGradient>
+              <linearGradient id="roof" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#2f6f64"/><stop offset="100%" stopColor="#1d4a44"/></linearGradient>
+              <linearGradient id="fst" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#1f3a22"/><stop offset="100%" stopColor="#13261a"/></linearGradient>
+            </defs>
+            <rect x="0" y="0" width="880" height="260" fill="url(#sky)"/>
+            <circle cx="150" cy="120" r="95" fill="url(#sun)"/><circle cx="150" cy="120" r="34" fill="#ffe7ad" opacity="0.9"/>
+            <path fill="#3c5e6e" opacity="0.7" d="M0,190 C120,150 220,176 340,150 C470,122 560,168 700,142 C800,124 870,160 880,140 L880,230 L0,230 Z"/>
+            <path fill="url(#h1)" d="M0,232 C140,196 250,222 380,196 C520,170 620,212 760,188 C840,174 870,202 880,190 L880,300 L0,300 Z"/>
+            <path fill="url(#h2)" d="M0,300 C150,266 280,296 420,272 C560,250 660,290 800,266 C860,252 880,278 880,270 L880,420 L0,420 Z"/>
+            <path fill="none" stroke="#8fc06a" strokeWidth="3" opacity="0.4" d="M0,300 C150,266 280,296 420,272 C560,250 660,290 800,266 C860,252 880,278 880,270"/>
+            <path fill="url(#h3)" d="M0,430 C170,392 300,430 470,408 C610,388 730,438 880,410 L880,600 L0,600 Z"/>
+            {/* lake */}
+            <path fill="url(#lake)" d="M250,400 C232,366 300,352 366,362 C420,340 478,346 516,368 C596,360 622,402 606,444 C618,490 536,520 442,514 C356,520 286,498 276,458 C266,432 250,418 250,400 Z"/>
+            <g stroke="rgba(255,255,255,.3)" strokeWidth="2" fill="none"><path d="M286,418 C322,410 360,424 398,416"/><path d="M300,452 C344,444 392,458 438,450"/></g>
+            {/* castle on rock */}
+            <ellipse cx="440" cy="500" rx="120" ry="34" fill="#1d7f93" opacity="0.5"/>
+            <path fill="url(#rock)" d="M392,500 C388,452 398,406 418,378 C438,404 444,388 456,382 C474,396 482,440 492,474 C498,494 492,508 472,512 C436,520 410,514 392,500 Z"/>
+            <g stroke="#eafcff" strokeWidth="3" opacity="0.65" strokeLinecap="round"><path d="M420,462 L418,500"/><path d="M460,468 L462,504"/></g>
+            <g stroke="#2c3531" strokeWidth="1.4">
+              <rect x="402" y="312" width="18" height="92" fill="url(#cas)"/>
+              <rect x="466" y="290" width="20" height="114" fill="url(#cas)"/>
+              <rect x="424" y="338" width="42" height="68" fill="url(#cas)"/>
+              <rect x="486" y="354" width="18" height="52" fill="url(#cas)"/>
+            </g>
+            <g fill="url(#roof)"><polygon points="411,286 400,312 422,312"/><polygon points="476,262 464,290 488,290"/><polygon points="445,310 422,338 468,338"/><polygon points="495,330 484,354 506,354"/></g>
+            <g fill="#f6cf78"><rect x="432" y="352" width="6" height="12" rx="1.5"/><rect x="444" y="352" width="6" height="12" rx="1.5"/><rect x="456" y="352" width="6" height="12" rx="1.5"/><rect x="438" y="376" width="6" height="12" rx="1.5"/><rect x="450" y="376" width="6" height="12" rx="1.5"/><rect x="472" y="312" width="5" height="10" rx="1.5"/><rect x="472" y="340" width="5" height="10" rx="1.5"/></g>
+            {/* forest band (treeline) */}
+            <path fill="url(#fst)" d="M0,150 C120,130 280,158 440,140 C600,122 740,156 880,138 L880,210 C740,228 600,200 440,214 C280,228 120,200 0,210 Z"/>
+            <g fill="#0e1d12"><circle cx="80" cy="172" r="12"/><circle cx="170" cy="160" r="10"/><circle cx="280" cy="178" r="13"/><circle cx="400" cy="162" r="11"/><circle cx="520" cy="180" r="13"/><circle cx="640" cy="160" r="11"/><circle cx="760" cy="178" r="12"/><circle cx="840" cy="162" r="10"/></g>
+            {/* winding road */}
+            <g fill="none" stroke="#cdb487" strokeWidth="7" opacity="0.55" strokeLinecap="round"><path d="M440,200 C420,280 360,300 440,360 C520,420 440,470 442,500"/><path d="M170,260 C220,320 320,330 380,380"/><path d="M720,260 C660,320 560,330 500,380"/></g>
+          </svg>
+
+          <div className="forestdark" style={{ opacity: Math.min(.7, 0.18 + hordeSize*0.05) }}></div>
+          <div className="vig"></div>
+          <div className={"flash"+(flash?' on':'')}></div>
+
+          {/* march arrows */}
+          <div className="march" style={{left:'46%', top:'26%'}}><span>▼</span></div>
+          <div className="march" style={{left:'30%', top:'54%'}}><span>▼</span></div>
+          <div className="march" style={{left:'66%', top:'54%'}}><span>▼</span></div>
+          <div className="march" style={{left:'48%', top:'74%'}}><span>▼</span></div>
+
+          {/* regions with clustered figures */}
+          {REGIONS.map(r=>{
+            const list = occ(r.id);
+            const hot = placing && (placing.kind==='ally'||placing.kind==='ench') && r.side==='play' && placing.cost<=mana.cur;
+            const shown = list.slice(0, MAX_SHOWN), extra = list.length-shown.length;
+            return (
+              <div key={r.id} className={"region "+(r.side==='enemy'?'foe':'you')+(hot?' hot':'')+(list.length===0?' empty':'')}
+                style={{ left:r.x+'%', top:r.y+'%' }}
+                onClick={(ev)=>{ if(hot){ ev.stopPropagation(); deploy(r); } }}>
+                <div className="rl">{r.name.split(' — ')[0]}{list.length>0?` · ${list.length}`:''}</div>
+                <div className="cluster">
+                  {shown.map(u=>{
+                    const targetable = placing && placing.kind==='spell' && u.side==='enemy' && placing.cost<=mana.cur;
+                    const dim = placing && ((placing.kind==='ally' && u.side==='enemy') || (placing.kind==='spell' && u.side==='ally'));
+                    return <Fig key={u.id} u={u} selected={inspect.id===u.id} glow={targetable} dim={dim}
+                      onClick={(ev)=>{ ev.stopPropagation(); if(targetable) castOn(u); else { setInspect({id:u.id}); setPlacing(null); } }} />;
+                  })}
+                  {extra>0 && <div className="more">+{extra}</div>}
+                </div>
+              </div>
+            );
+          })}
+
+          {placing && (
+            <div className="hint" onClick={e=>e.stopPropagation()}>
+              <span>{placing.kind==='spell' ? `Cast ${placing.name} — tap a foe` : (placing.kind==='ench' ? `Raise ${placing.name} — tap a region` : `Deploying ${placing.name} — tap a region of the grounds`)}</span>
+              <button onClick={()=>setPlacing(null)}>Cancel</button>
+            </div>
+          )}
+        </div>
+
+        {/* RIGHT RAIL */}
+        <div className="rail right" onClick={e=>e.stopPropagation()}>
+          <h3>Inspector</h3>
+          {ins ? (
+            <div style={{display:'flex',flexDirection:'column',gap:9}}>
+              <div className="ins-top">
+                <div className="ins-art ph">art</div>
+                <div>
+                  <div className="ins-name">{ins.name}</div>
+                  <div className="ins-type" style={{ color: insU && insU.side==='enemy' ? '#8fd06a' : '#d99b34' }}>{insU?insU.type:insC.tag}</div>
+                  <div className="ins-stats">{insU && <span className="pip atk">{insU.atk}</span>}{insU && <span className="pip hp">{insU.hp}</span>}{insC && insC.kind==='ally' && <span className="pip atk">{insC.atk}</span>}{insC && insC.kind==='ally' && <span className="pip hp">{insC.hp}</span>}{insC && <span style={{fontSize:11,color:'#cfe0ff',fontWeight:700,marginLeft:3}}>{insC.cost} mana</span>}</div>
+                </div>
+              </div>
+              <div className="ins-ab">{ins.ab}</div>
+              <div className="kw">{(insU ? (insU.side==='enemy'?['Dark Army','Foe']:['Ally','Defender']) : [insC.tag.split(' · ')[0]]).map((k,i)=><span key={i}>{k}</span>)}</div>
+            </div>
+          ) : (<div className="ins-empty">Click any figure on the battlefield, or a card in your hand, to inspect it.</div>)}
+          <div className="divider"></div>
+          <h3>Active Enchantments</h3>
+          <div style={{display:'flex',flexDirection:'column',gap:6}}>
+            <div className="ench gold">↑ Rally · +1 attack<span style={{marginLeft:'auto',opacity:.7}}>1 turn</span></div>
+            <div className="ench">◈ Protego · 6 shield<span style={{marginLeft:'auto',opacity:.7}}>Gate</span></div>
+          </div>
+        </div>
+
+        {/* TRAY */}
+        <div className="tray" onClick={e=>e.stopPropagation()}>
+          <div className="pod">
+            <div className="crest" style={{ background:'linear-gradient(var(--lion),#7a0f1e)' }}>I</div>
+            <div>
+              <div className="pod-nm">P1 · Lion</div>
+              <div className="mana">{Array.from({length:mana.max}).map((_,i)=>(<span key={i} className={"cry"+(i<mana.cur?' on':'')}></span>))}<span className="mnum">{mana.cur}/{mana.max}</span></div>
+              <div className="piles"><span className="pile"><b></b>DECK 15</span><span className="pile"><b className="disc"></b>DISC {7-hand.length}</span></div>
+            </div>
+          </div>
+          <div className="hand">
+            {hand.map(c=>{ const aff=c.cost<=mana.cur, armed=placing&&placing.id===c.id, dim=placing&&placing.id!==c.id;
+              return (
+                <div key={c.id} className={"card"+(armed?' armed':'')+(dim?' dim':'')+(aff?'':' poor')} onClick={(e)=>{ e.stopPropagation(); pickCard(c); }}>
+                  <div className="strip" style={{ background:c.color }}></div>
+                  <div className="cost">{c.cost}</div><div className="cart ph"></div>
+                  <div className="cnm">{c.name}</div><div className="ctag">{c.tag.split(' · ')[0]}</div>
+                </div>
+              );
+            })}
+            {hand.length===0 && <div style={{color:'rgba(233,226,210,.5)',fontFamily:'EB Garamond,serif'}}>Hand empty — End Turn to draw.</div>}
+          </div>
+          <div className="endturn" onClick={endTurn}>END TURN<small>the Dark Army surges</small></div>
+          <div className="pod">
+            <div style={{textAlign:'right'}}>
+              <div className="pod-nm">P2 · Eagle</div>
+              <div className="mana" style={{justifyContent:'flex-end'}}><span className="mnum" style={{margin:'0 5px 0 0'}}>5/5</span>{Array.from({length:5}).map((_,i)=>(<span key={i} className="cry on"></span>))}</div>
+              <div className="piles" style={{justifyContent:'flex-end'}}><span className="pile"><b></b>DECK 17</span><span className="pile"><b className="disc"></b>DISC 3</span></div>
+            </div>
+            <div className="crest" style={{ background:'linear-gradient(var(--eagle),#16284f)' }}>II</div>
+          </div>
+        </div>
+      </div>
+
+      {over && (
+        <div className="over">
+          <div>
+            <h1 style={{ color: over==='victory'?'#6fbf3f':'#d9603c' }}>{over==='victory'?'The Siege is Broken':'Hogwarts Has Fallen'}</h1>
+            <p>{over==='victory'?'The Dark Army’s morale shatters; they flee into the night.':'The Ward fails and the castle is overrun.'}</p>
+            <button onClick={reset}>Play Again</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

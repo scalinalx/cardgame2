@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Conquest of Erathia — focused HOMM3 UI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Cinzel+Decorative:wght@700;900&family=Spectral:ital,wght@0,400;0,600;1,400&display=swap');
+
+:root{
+  --gold:#e8c34a; --gold-d:#a9801f; --gold-l:#ffe9a6; --gold-dk:#6e4f12;
+  --red:#9c1410; --red-d:#5e0c0a; --red-l:#c83028;
+  --ink:#efe2c4; --ink-dim:#bcab83; --ink-dk:#2e2110;
+  --panel:#241a12; --panel-2:#1a120c; --edge:#c9a23e;
+  --blue:#6fa8e6; --good:#8fe089; --bad:#f0897e;
+}
+*{box-sizing:border-box;}
+html,body{margin:0; min-height:100%;}
+/* atmospheric backdrop: deep night + warm glow + vignette */
+html{ background:
+   radial-gradient(120% 80% at 50% -8%, rgba(232,195,74,.10), transparent 55%),
+   radial-gradient(90% 70% at 50% 120%, rgba(120,40,30,.18), transparent 60%),
+   #0c0a10; }
+body{ font-family:'Spectral',Georgia,serif; color:var(--ink); min-height:100vh;
+  background:
+   radial-gradient(140% 120% at 50% 0%, transparent 60%, rgba(0,0,0,.55) 100%); }
+button{font-family:inherit; cursor:pointer; color:inherit;}
+.cz{font-family:'Cinzel',serif;}
+a{color:var(--gold-l);}
+
+/* gold engraved text */
+.gold{ font-family:'Cinzel',serif; font-weight:700; letter-spacing:.03em;
+  background:linear-gradient(#fff4c4 6%,#f0d168 36%,#c79a2e 64%,#8a6517 100%);
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 1px 0 #1c1206) drop-shadow(0 2px 2px rgba(0,0,0,.45)); }
+
+/* ===== icons ===== */
+.ic{width:1em; height:1em; display:inline-block; vertical-align:-.16em;}
+.ic-lg{width:26px; height:26px;}
+
+/* ===== ornate panel (used sparingly, as a real frame) ===== */
+.ornate{ position:relative; border-radius:9px;
+  background:linear-gradient(var(--panel),var(--panel-2));
+  border:1px solid #000;
+  box-shadow:inset 0 0 0 1px rgba(201,162,62,.45), inset 0 0 30px rgba(0,0,0,.5), 0 14px 34px rgba(0,0,0,.55); }
+.ornate::before{ content:''; position:absolute; inset:4px; border-radius:6px; border:1px solid rgba(201,162,62,.22); pointer-events:none; }
+.fcorner{ position:absolute; width:30px; height:30px; color:#dcb24e; z-index:3; filter:drop-shadow(0 1px 1px rgba(0,0,0,.6)); pointer-events:none;}
+.fcorner.tl{top:2px;left:2px;} .fcorner.tr{top:2px;right:2px;transform:scaleX(-1);}
+.fcorner.bl{bottom:2px;left:2px;transform:scaleY(-1);} .fcorner.br{bottom:2px;right:2px;transform:scale(-1);}
+
+/* ===== buttons ===== */
+.btn{ display:block; width:100%; text-align:left; position:relative; padding:9px 12px; border-radius:6px;
+  font-family:'Cinzel',serif; font-weight:700; font-size:13px; color:#f4e4b0;
+  background:linear-gradient(#5d4322,#372614); border:1px solid #120b05;
+  box-shadow:inset 0 1px 0 rgba(255,235,160,.28), inset 0 0 0 1px rgba(201,162,62,.3), 0 3px 0 #160d05, 0 5px 10px rgba(0,0,0,.4);
+  transition:transform .05s, filter .1s;}
+.btn:hover{filter:brightness(1.13);}
+.btn:active{transform:translateY(2px); box-shadow:inset 0 1px 0 rgba(255,235,160,.25), 0 1px 0 #160d05;}
+.btn:disabled{filter:grayscale(.6) brightness(.55); cursor:not-allowed;}
+.btn small{display:block; font-family:'Spectral',serif; font-weight:400; font-size:11.5px; color:#cdbb8c; margin-top:2px;}
+.btn .cost{position:absolute; top:9px; right:11px; display:flex; align-items:center; gap:3px; font-family:'Spectral',serif; font-weight:700; color:var(--gold-l);}
+.btn.gild{ background:linear-gradient(#f3d780,#c2922f); color:#3a2606; border-color:#6e4f12;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55), 0 3px 0 #6e4f12, 0 5px 10px rgba(0,0,0,.45);}
+.btn.gild small{color:#5a3f10;} .btn.gild .cost{color:#3a2606;}
+.btn.red{ background:linear-gradient(#b6322a,#7a1410); color:#ffe9c4; border-color:#3a0706;}
+.btn-sm{ display:inline-flex; align-items:center; justify-content:center; gap:4px; padding:5px 12px; border-radius:5px;
+  font-family:'Cinzel',serif; font-weight:700; font-size:12px; color:#3a2606;
+  background:linear-gradient(#f0d077,#c2922f); border:1px solid #6e4f12;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5), 0 2px 0 #6e4f12;}
+.btn-sm:disabled{filter:grayscale(.6) brightness(.78); cursor:not-allowed;}
+.ghost{ background:transparent; border:1px solid rgba(201,162,62,.6); color:var(--gold-l); border-radius:6px; padding:7px 13px; font-family:'Cinzel',serif; font-size:13px;}
+.ghost:hover{background:rgba(201,162,62,.14);}
+
+/* ===== app shell ===== */
+.app{max-width:1500px; margin:0 auto; padding:14px 18px 300px;}
+
+/* status bar — slim, the only always-on chrome up top */
+.statusbar{ display:flex; align-items:center; gap:20px; flex-wrap:wrap; padding:8px 14px; margin-bottom:14px;
+  border-radius:9px; background:linear-gradient(#241a12,#160f09);
+  border:1px solid #000; box-shadow:inset 0 0 0 1px rgba(201,162,62,.4), 0 8px 20px rgba(0,0,0,.5);}
+.crest{display:flex; align-items:center; gap:10px;}
+.crest .shield{width:34px; height:38px;}
+.crest .nm{font-family:'Cinzel Decorative',serif; font-weight:900; font-size:18px; letter-spacing:.03em;}
+.week{font-family:'Cinzel',serif; color:var(--gold-l); font-size:13px; background:#3a0706; padding:4px 11px; border-radius:6px; border:1px solid rgba(201,162,62,.5);}
+.jewels{display:flex; gap:16px; flex:1; justify-content:center; flex-wrap:wrap;}
+.jewel{display:flex; align-items:center; gap:8px;}
+.jewel .orb{width:30px; height:30px; flex:0 0 auto;}
+.jewel .jt{font-size:11px; color:var(--ink-dim); font-variant:small-caps; letter-spacing:.05em; line-height:1.1;}
+.jewel .jv{font-family:'Cinzel',serif; color:var(--gold-l); font-size:15px;}
+.jbar{height:5px; width:74px; background:#1a0f08; border-radius:3px; margin-top:2px; overflow:hidden; box-shadow:inset 0 1px 2px #000;}
+.jbar > i{display:block; height:100%; background:linear-gradient(90deg,#b8902f,#ffe9a6);}
+.turnchip{font-family:'Cinzel',serif; font-weight:700; color:#fff; padding:6px 14px; border-radius:6px; box-shadow:inset 0 1px 0 rgba(255,255,255,.25), 0 3px 7px rgba(0,0,0,.4);}
+.turnchip.p0{background:linear-gradient(#5e94d6,#2f5fa0);} .turnchip.p1{background:linear-gradient(#c75b4a,#8a2c20);}
+
+/* proclamation — a thin engraved ribbon */
+.proclaim{ text-align:center; margin:0 0 14px; padding:8px 18px; border-radius:7px; font-size:14px; color:var(--ink);
+  background:linear-gradient(#3a0c0a,#260807); border:1px solid #000; box-shadow:inset 0 0 0 1px rgba(201,162,62,.4);}
+.proclaim b{color:var(--gold-l); font-family:'Cinzel',serif;} .proclaim i{color:#e2c293;}
+
+/* ===== THE STAGE: map is the hero, one tabbed command panel beside it ===== */
+.stage{ display:grid; grid-template-columns:minmax(0,1fr) 372px; gap:16px; align-items:start;}
+.mapframe{ position:relative; border-radius:10px; padding:10px;
+  background:
+    radial-gradient(120% 90% at 50% 40%, rgba(232,195,74,.12), transparent 60%),
+    linear-gradient(160deg,#16240f,#0a1207);
+  border:1px solid #000; box-shadow:inset 0 0 0 1px rgba(201,162,62,.45), inset 0 0 60px rgba(0,0,0,.6), 0 16px 40px rgba(0,0,0,.6);}
+.mapframe h3{ margin:2px 0 8px; text-align:center; font-size:15px; }
+.hexmap{ width:auto; height:auto; max-width:100%; max-height:62vh; display:block; margin:0 auto; filter:drop-shadow(0 10px 22px rgba(0,0,0,.55));}
+.maplegend{font-size:11.5px; color:var(--ink-dim); margin-top:8px; text-align:center;}
+
+/* command panel with tabs */
+.command{ position:sticky; top:14px; }
+.tabs{ display:flex; gap:4px; margin-bottom:-1px; position:relative; z-index:2;}
+.tab{ flex:1; padding:9px 4px 11px; border-radius:8px 8px 0 0; font-family:'Cinzel',serif; font-weight:700; font-size:12px;
+  color:#cdbb8c; background:linear-gradient(#241a12,#160f09); border:1px solid #000; border-bottom:none;
+  display:flex; flex-direction:column; align-items:center; gap:3px;}
+.tab .ic{width:18px; height:18px;}
+.tab.on{ color:#3a2606; background:linear-gradient(#f0d077,#c2922f); box-shadow:inset 0 1px 0 rgba(255,255,255,.5);}
+.tabbody{ border-radius:0 0 9px 9px; padding:14px; min-height:62vh; max-height:74vh; overflow-y:auto;
+  background:linear-gradient(var(--panel),var(--panel-2)); border:1px solid #000;
+  box-shadow:inset 0 0 0 1px rgba(201,162,62,.4), inset 0 0 26px rgba(0,0,0,.5);}
+.tabbody h4{ margin:0 0 4px; font-size:14px;}
+.turn-hint{font-size:12px; color:var(--ink-dim); font-style:italic; margin-bottom:10px;}
+.subhead{font-size:10px; text-transform:uppercase; letter-spacing:.08em; color:var(--gold); opacity:.75; margin:13px 0 6px;}
+.btn{margin:7px 0;}
+
+/* ? tooltip — trigger only; the bubble is a single body-level floating element
+   so it can never be clipped by a scrolling panel */
+.q{ position:relative; display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; flex:0 0 auto;
+  border-radius:50%; background:#3a0706; border:1px solid var(--edge); color:var(--gold-l); font-size:10px; font-weight:700; cursor:help; margin-left:5px;}
+.q:hover{background:var(--gold); color:#3a0706;}
+.q .tip{display:none;} /* source text, hidden; copied into #floattip on hover */
+#floattip{ position:fixed; z-index:9999; display:none; width:250px; max-width:72vw;
+  background:#160f09; color:var(--ink); border:1px solid var(--gold-d); border-radius:8px; padding:9px 11px;
+  font-family:'Spectral',serif; font-size:12.5px; font-weight:400; line-height:1.5; text-align:left;
+  box-shadow:0 10px 26px rgba(0,0,0,.75);}
+
+/* goals / wonder / quests within tabs */
+.gtrack{display:flex; justify-content:space-between; align-items:center; font-size:13px; padding:5px 9px; border-radius:6px; background:#160f09; margin:4px 0;}
+.gtrack.done{background:rgba(127,199,133,.18); color:var(--good); font-weight:700;}
+.gtrack .lt{display:flex; align-items:center; gap:7px;}
+.goal{display:flex; justify-content:space-between; align-items:center; gap:8px; padding:6px 0; border-bottom:1px dashed rgba(201,162,62,.22); font-size:13px;}
+.goal small{color:var(--ink-dim);} .goal .claimed{color:var(--gold-l); font-size:11px;}
+.wstage,.quest{border:1px solid #6e4f12; border-radius:7px; padding:7px 10px; margin-top:7px; background:#160f09; font-size:12.5px;}
+.wstage.done{border-color:#3f8a34; opacity:.82;} .wstage.next,.quest.ready{border-color:var(--gold); box-shadow:0 0 0 1px rgba(232,195,74,.3);}
+.wstage .wh,.quest .qh{display:flex; justify-content:space-between; align-items:center; gap:6px;}
+.wstage .wm,.quest .qc{font-size:10.5px; color:var(--gold-l); margin-top:2px;}
+.wstage .wr,.quest .qr{font-size:11px; color:#e2cb9c; margin-top:2px;}
+.wname{color:var(--gold-l); font-family:'Cinzel',serif; font-weight:700; margin-bottom:2px;}
+.secret{border:1px solid var(--good); border-radius:7px; padding:7px 10px; background:#16140c; margin-top:7px;}
+.log{font-size:12px; line-height:1.55; color:#cdbb8c;}
+.log .me{color:var(--gold-l);}
+
+/* ===== opponent strip (slim) ===== */
+.oppbar{ display:flex; align-items:center; gap:12px; margin-top:14px; padding:8px 14px; border-radius:8px;
+  background:linear-gradient(#2a1c12,#180f09); border:1px solid #000; box-shadow:inset 0 0 0 1px rgba(201,162,62,.3);}
+.oppbar .pport{width:30px; height:30px; border-radius:5px; background:radial-gradient(120% 120% at 30% 20%,#6a6770,#3d3b45); display:flex; align-items:center; justify-content:center;}
+.oppbar .onm{font-family:'Cinzel',serif; font-weight:700; color:#e89b8b;}
+.oppbar .ginfo{margin-left:auto; color:var(--gold-l); font-family:'Cinzel',serif;}
+.oppbar .mini-res{display:flex; gap:9px; color:var(--ink-dim); font-size:13px; align-items:center;}
+.oppbar .chev{width:26px; height:26px; border-radius:6px; background:linear-gradient(#f0d077,#c2922f); color:#3a2606; border:1px solid #6e4f12; font-size:14px;}
+
+/* ===== HAND DOCK (bottom, fanned cards over a shelf) ===== */
+.dock{ position:fixed; left:0; right:0; bottom:0; z-index:40;
+  background:linear-gradient(180deg, rgba(12,9,7,0), #160f09 30%, #0c0805);
+  padding:22px 18px 16px; border-top:2px solid rgba(201,162,62,.35);}
+.dock-inner{max-width:1500px; margin:0 auto; display:flex; align-items:flex-end; gap:18px;}
+.handfan{ flex:1; display:flex; justify-content:center; align-items:flex-end; gap:10px; min-height:230px; padding-bottom:6px;}
+.handfan .card{ width:174px; transform-origin:bottom center; transition:transform .12s, box-shadow .12s; }
+.handfan .card:hover{ transform:translateY(-26px) scale(1.05) rotate(0deg) !important; z-index:20; box-shadow:0 18px 34px rgba(0,0,0,.6), inset 0 0 0 2px var(--gold);}
+.card{ position:relative; border-radius:11px; padding:13px 14px 14px; color:#f4ead2; cursor:pointer;
+  background:linear-gradient(#4a3217,#281a0c); border:2px solid #120b05;
+  box-shadow:inset 0 0 0 1px rgba(201,162,62,.4), inset 0 0 16px rgba(0,0,0,.5), 0 8px 16px rgba(0,0,0,.55);}
+.card.dim{filter:grayscale(.5) brightness(.7);}
+.card .cn{font-family:'Cinzel',serif; font-weight:700; color:#f3df9e; font-size:15px; line-height:1.16; padding-right:40px; min-height:34px;}
+.card.sig .cn{color:var(--gold-l);}
+.card .cc{position:absolute; top:11px; right:11px; width:32px; height:32px; border-radius:50%; font-weight:800; color:#3a2606;
+  background:radial-gradient(circle at 34% 30%,#fff4c4,#e8c34a 60%,#b8902f); border:1px solid #6e4f12; display:flex; align-items:center; justify-content:center; font-size:15px; box-shadow:0 1px 3px rgba(0,0,0,.5);}
+.card .ty{font-size:10px; letter-spacing:.14em; text-transform:uppercase; margin-top:4px;}
+.card .ty.structure{color:#9ed8a6;} .card .ty.power{color:#9cc4f0;} .card .ty.spell{color:#e6a6e6;}
+.ctags{display:flex; flex-wrap:wrap; gap:5px; margin:9px 0; padding-top:8px; border-top:1px solid rgba(201,162,62,.18);}
+.ctag{display:inline-flex; align-items:center; gap:4px; font-size:10.5px; line-height:1; padding:3px 9px; border-radius:11px;
+  background:#160f09; border:1px solid #6e4f12; color:#e6cf9a;}
+.ctag .tgi{font-size:11px;}
+/* per-tag accent tints */
+.tg-magic,.tg-dragon{border-color:#7a5ab0; color:#cdb3f0;} .tg-might,.tg-creature{border-color:#a85a3a; color:#f0bf9a;}
+.tg-wealth{border-color:#b8902f; color:var(--gold-l);} .tg-building{border-color:#6a8f4a; color:#bfe0a0;}
+.tg-undead{border-color:#5a8f7a; color:#a0e0cf;} .tg-hero{border-color:#5e8fc0; color:#bcd8ff;} .tg-beast{border-color:#9a7a4a; color:#e0cf9a;}
+.card .tx{font-size:12.5px; color:#e8d9b6; line-height:1.42; margin-top:2px; min-height:42px; padding-bottom:16px;}
+.card .vp{position:absolute; bottom:10px; right:13px; color:var(--gold); font-weight:800; font-size:13px;}
+.dock-side{display:flex; flex-direction:column; align-items:stretch; gap:9px; width:328px;}
+.ribbon{ display:grid; grid-template-columns:repeat(3,1fr); border-radius:9px; overflow:hidden;
+  background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(0,0,0,.3)), repeating-linear-gradient(135deg,#a8201a 0 6px,#8c1712 6px 12px);
+  border:2px solid #2a0605; box-shadow:inset 0 0 0 2px var(--edge), inset 0 0 16px rgba(0,0,0,.5);}
+.ribbon .rc{display:flex; align-items:center; gap:6px; padding:8px 11px; border-right:1px solid rgba(0,0,0,.3); border-bottom:1px solid rgba(0,0,0,.3); justify-content:flex-start;}
+.ribbon .rc .ic{filter:drop-shadow(0 0 1px rgba(0,0,0,.9)) drop-shadow(0 1px 1px rgba(0,0,0,.7));}
+.ribbon .rc .amt{font-family:'Cinzel',serif; font-weight:700; font-size:16px; color:var(--gold-l); text-shadow:0 1px 0 #3a0706, 0 0 4px rgba(0,0,0,.5);}
+.ribbon .rc .pr{font-size:11px; color:var(--good);} .ribbon .rc .pr.neg{color:var(--bad);}
+.dock-btns{display:flex; gap:8px;}
+.dock-btns .btn{margin:0; flex:1; text-align:center;}
+.handlabel{text-align:center; font-size:11px; color:var(--ink-dim); margin-bottom:4px; font-variant:small-caps; letter-spacing:.06em;}
+
+/* ===== full-screen phases ===== */
+.fs{min-height:calc(100vh - 30px); display:flex; align-items:center; justify-content:center; padding:30px 16px;}
+.fbox{max-width:880px; width:100%; padding:30px 34px;}
+.hero h1{font-family:'Cinzel Decorative',serif; font-weight:900; font-size:clamp(32px,6vw,60px); margin:0; text-align:center; letter-spacing:.03em;}
+.hero .sub{color:#e2c293; font-style:italic; font-size:18px; margin-top:10px; text-align:center;}
+.fld{display:flex; flex-direction:column; gap:5px; font-size:13px; color:var(--gold-l); font-family:'Cinzel',serif;}
+.fld input{font-family:'Spectral',serif; padding:9px 11px; border-radius:6px; border:1px solid var(--edge); background:#160f09; color:#f1ecdd; font-size:15px;}
+.row{display:flex; gap:14px; flex-wrap:wrap;} .row.center{justify-content:center; align-items:center;}
+.die{display:inline-flex; align-items:center; justify-content:center; width:104px; height:104px; margin:14px auto; font-size:48px; font-weight:900;
+  color:#3a2606; border-radius:18px; border:3px solid #6e4f12; font-family:'Cinzel',serif;
+  background:radial-gradient(circle at 35% 28%,#fff4c4,#e8c34a 60%,#b8902f); box-shadow:0 0 0 3px var(--blue), 0 10px 24px rgba(0,0,0,.5), inset 0 0 14px rgba(255,255,255,.5);}
+.draft-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:16px; margin-top:10px;}
+.fcard{ padding:16px; border-radius:8px; cursor:pointer; transition:transform .08s; position:relative; overflow:hidden;
+  background:linear-gradient(#3a2614,#1f140b); border:2px solid #120b05; box-shadow:inset 0 0 0 1px rgba(201,162,62,.4), 0 6px 14px rgba(0,0,0,.5);}
+.fcard:hover{transform:translateY(-4px); box-shadow:inset 0 0 0 1px var(--gold), 0 12px 22px rgba(0,0,0,.6);}
+.fcard h3{font-family:'Cinzel',serif; color:var(--gold-l); margin:0 0 4px; font-size:19px;}
+.fcard .bl{font-style:italic; color:#e2c293; font-size:13px; margin-bottom:9px;}
+.fcard .de{font-size:13px; color:#e8d9b6; line-height:1.45;}
+.research-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(178px,1fr)); gap:12px; max-height:56vh; overflow-y:auto; padding:4px;}
+.research-grid .card{cursor:pointer;}
+.research-grid .card.keep{box-shadow:inset 0 0 0 2px var(--good), 0 8px 16px rgba(0,0,0,.5);}
+.keepmark{position:absolute; top:6px; left:8px; color:var(--good); font-weight:800; font-size:11px;}
+.score-table{width:100%; border-collapse:collapse; margin-top:12px;}
+.score-table th,.score-table td{padding:9px 10px; border-bottom:1px solid rgba(201,162,62,.3); text-align:center;}
+.score-table th{font-family:'Cinzel',serif; color:var(--gold-l); font-size:12px;}
+.score-table th:first-child,.score-table td:first-child{text-align:left;}
+.score-table .winrow{background:rgba(232,195,74,.13);}
+.score-table .total{font-family:'Cinzel',serif; font-weight:800; color:var(--gold-l); font-size:19px;}
+.overlay{position:fixed; inset:0; z-index:200; display:flex; align-items:center; justify-content:center; padding:24px; background:rgba(8,5,3,.85); backdrop-filter:blur(3px);}
+.handoff{text-align:center;} .handoff .who{font-family:'Cinzel',serif; font-size:clamp(26px,5vw,44px); margin:12px 0;}
+.pay-row{display:flex; align-items:center; gap:10px; margin:10px 0;} .stepper{display:flex; gap:8px; align-items:center;} .stepper .ghost{width:34px; text-align:center; padding:6px 0;}
+
+/* phase nav */
+.phasenav{position:sticky; top:0; z-index:300; display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding:8px 14px; background:linear-gradient(#160f09,#0a0604); border-bottom:2px solid var(--edge);}
+.phasenav b{color:var(--gold-l); font-family:'Cinzel',serif; letter-spacing:.06em; margin-right:6px;}
+.phasenav button{font-family:'Cinzel',serif; font-size:12.5px; padding:6px 11px; border-radius:6px; border:1px solid #6e4f12; background:#241a12; color:#e6cf9a;}
+.phasenav button.on{background:linear-gradient(#f0d077,#c2922f); color:#3a2606;}
+
+@media(max-width:1080px){ .stage{grid-template-columns:1fr;} .command{position:static;} .dock-side{width:auto;} .dock-inner{flex-direction:column; align-items:stretch;} }
+</style>
+</head>
+<body>
+<!-- ===================== SVG ICON SPRITE ===================== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<defs>
+  <radialGradient id="gCoin" cx="34%" cy="30%"><stop offset="0%" stop-color="#fff7c6"/><stop offset="45%" stop-color="#f1d062"/><stop offset="80%" stop-color="#c9962a"/><stop offset="100%" stop-color="#9c6f15"/></radialGradient>
+  <linearGradient id="gGem" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#bff0f6"/><stop offset="100%" stop-color="#3aa6b6"/></linearGradient>
+  <linearGradient id="gSteel" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#eef2f6"/><stop offset="100%" stop-color="#9aa0a8"/></linearGradient>
+</defs>
+<symbol id="r-gold" viewBox="0 0 32 32"><circle cx="16" cy="16" r="13" fill="url(#gCoin)" stroke="#7d5a12" stroke-width="2"/><path d="M16 8.5l1.9 3.9 4.3.6-3.1 3 .7 4.3-3.8-2-3.8 2 .7-4.3-3.1-3 4.3-.6z" fill="#fff6cf" stroke="#9a6f15" stroke-width=".6"/></symbol>
+<symbol id="r-wood" viewBox="0 0 32 32"><g stroke="#4a3018" stroke-width="1.4"><rect x="3.5" y="10.5" width="22" height="7" rx="3.5" fill="#9c6b3c"/><ellipse cx="6" cy="14" rx="2.6" ry="3.5" fill="#c89a63"/><circle cx="6" cy="14" r="1" fill="#5a3a1c" stroke="none"/><rect x="6.5" y="18" width="22" height="7" rx="3.5" fill="#85592c"/><ellipse cx="9" cy="21.5" rx="2.6" ry="3.5" fill="#b88a55"/><circle cx="9" cy="21.5" r="1" fill="#5a3a1c" stroke="none"/></g></symbol>
+<symbol id="r-ore" viewBox="0 0 32 32"><path d="M5 21 L9.5 11 L22.5 11 L27 21 Z" fill="#9aa0a8" stroke="#3a3d44" stroke-width="1.5" stroke-linejoin="round"/><path d="M5 21 L27 21 L24 25.5 L8 25.5 Z" fill="#6a6e76" stroke="#3a3d44" stroke-width="1.5" stroke-linejoin="round"/><path d="M9.5 11 L16 15 L22.5 11" fill="none" stroke="#d4d8de" stroke-width="1"/></symbol>
+<symbol id="r-crystal" viewBox="0 0 32 32"><path d="M16 3 L25 12.5 L16 29 L7 12.5 Z" fill="url(#gGem)" stroke="#1f6e7a" stroke-width="1.5" stroke-linejoin="round"/><path d="M16 3 L11 12.5 L16 29 Z" fill="#bff0f6" opacity=".45"/><path d="M7 12.5 L25 12.5" stroke="#eafcff" stroke-width="1" opacity=".7"/></symbol>
+<symbol id="r-recruits" viewBox="0 0 32 32">
+  <g stroke="#15171c" stroke-width="1.1" stroke-linejoin="round">
+    <!-- blade NW->SE -->
+    <path d="M7.2 5.0 L9.0 6.8 L21.5 25.5 L18.8 25.0 L6.0 7.0 Z" fill="url(#gSteel)"/>
+    <!-- blade NE->SW -->
+    <path d="M24.8 5.0 L26.0 7.0 L13.2 25.0 L10.5 25.5 L23.0 6.8 Z" fill="url(#gSteel)"/>
+    <!-- crossguards -->
+    <rect x="5.0" y="20.2" width="9.5" height="2.6" rx="1.3" transform="rotate(-46 9.7 21.5)" fill="#caa12f"/>
+    <rect x="17.5" y="20.2" width="9.5" height="2.6" rx="1.3" transform="rotate(46 22.3 21.5)" fill="#caa12f"/>
+    <!-- pommels -->
+    <circle cx="20.4" cy="27.2" r="2" fill="#caa12f"/><circle cx="11.6" cy="27.2" r="2" fill="#caa12f"/>
+  </g></symbol>
+<symbol id="r-mercury" viewBox="0 0 32 32"><path d="M13 4 h6 v2 h-1.4 v5.5 l5 10.5 a3.2 3.2 0 0 1 -2.9 4.5 h-7.4 a3.2 3.2 0 0 1 -2.9 -4.5 l5 -10.5 v-5.5 h-1.4 z" fill="#e6dcf6" stroke="#5a3f7a" stroke-width="1.4"/><path d="M11.2 18 h9.6 l3 6.3 a3 3 0 0 1 -2.7 4.2 h-10.2 a3 3 0 0 1 -2.7 -4.2 z" fill="#a779e0"/></symbol>
+<!-- track jewels -->
+<symbol id="t-realm" viewBox="0 0 32 32"><circle cx="16" cy="16" r="14" fill="#2a1c0e" stroke="#caa12f" stroke-width="2"/><path d="M8 24 V14 l2-1.5 V10 h2 V8 h1.5 v2 h1.5 V8 h1.5 v2 h1.5 V8 h1.5 v2 h2 v2.5 L26 14 V24 Z" fill="#d9b24a" stroke="#7d5a12" stroke-width="1"/><rect x="14.5" y="18" width="3" height="6" fill="#3a2606"/></symbol>
+<symbol id="t-sorcery" viewBox="0 0 32 32"><circle cx="16" cy="16" r="14" fill="#1d142a" stroke="#9a7ad0" stroke-width="2"/><path d="M16 6 l2.4 6 6 .6-4.6 4 1.4 6.2-5.2-3.3-5.2 3.3 1.4-6.2-4.6-4 6-.6z" fill="#c9b3f0" stroke="#6a4ad0" stroke-width=".8"/></symbol>
+<symbol id="t-frontier" viewBox="0 0 32 32"><circle cx="16" cy="16" r="14" fill="#0e2230" stroke="#5aa6c0" stroke-width="2"/><circle cx="16" cy="16" r="8.5" fill="none" stroke="#9fdcec" stroke-width="1.2"/><path d="M16 8 L19 16 L16 24 L13 16 Z" fill="#e6f6fb"/><path d="M8 16 L16 13 L24 16 L16 19 Z" fill="#7fc3d6"/></symbol>
+<symbol id="shield" viewBox="0 0 34 38"><path d="M17 2 L31 6 V18 C31 28 24 34 17 36 C10 34 3 28 3 18 V6 Z" fill="#7a1410" stroke="#caa12f" stroke-width="2"/><path d="M17 7 L26 9.7 V18 C26 25 21.5 29.5 17 31 C12.5 29.5 8 25 8 18 V9.7 Z" fill="#9c1410"/><path d="M17 11 l2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z" fill="#e8c34a"/></symbol>
+</svg>
+
+<div class="phasenav">
+  <b>SCREEN ▸</b>
+  <button data-p="title">Title</button>
+  <button data-p="roll">D12 Roll</button>
+  <button data-p="draft">Town Draft</button>
+  <button data-p="research">Research</button>
+  <button data-p="game" class="on">In-Game Board</button>
+  <button data-p="modal">Play-card Modal</button>
+  <button data-p="handoff">Hot-seat Handoff</button>
+  <button data-p="over">Game Over</button>
+</div>
+<div id="root"></div>
+<div id="floattip"></div>
+
+<script>
+(function(){
+'use strict';
+/* one body-level tooltip that follows the hovered ? — never clipped by panels */
+(function(){
+  const ft=document.getElementById('floattip');
+  document.addEventListener('mouseover',e=>{
+    const q=e.target.closest('.q'); if(!q) return;
+    const src=q.querySelector('.tip'); if(!src) return;
+    ft.textContent=src.textContent; ft.style.display='block';
+    const r=q.getBoundingClientRect(); const tw=ft.offsetWidth, th=ft.offsetHeight, M=8;
+    let left=r.right-tw; if(left<M) left=M; if(left+tw>window.innerWidth-M) left=window.innerWidth-M-tw;
+    let top=r.top-th-8; if(top<M) top=r.bottom+8; /* flip below if no room above */
+    ft.style.left=left+'px'; ft.style.top=top+'px';
+  });
+  document.addEventListener('mouseout',e=>{ if(e.target.closest('.q')) ft.style.display='none'; });
+})();
+const ic = (n,cls)=>`<svg class="ic ${cls||''}"><use href="#${n}"/></svg>`;
+const RICON = { gold:'r-gold', wood:'r-wood', ore:'r-ore', crystal:'r-crystal', recruits:'r-recruits', mercury:'r-mercury' };
+/* tag glyph + label (small letter-glyph + name; cohesive, no emoji) */
+const TAGS = {
+  building:['🏛','Building'], creature:['🐾','Creature'], magic:['✦','Magic'], might:['⚔','Might'],
+  dragon:['🐉','Dragon'], undead:['☠','Undead'], beast:['🐗','Beast'], wealth:['◆','Wealth'], hero:['❖','Hero'],
+};
+function tagChips(tags){ if(!tags||!tags.length) return '';
+  return `<div class="ctags">${tags.map(t=>{const d=TAGS[t]||['•',t]; return `<span class="ctag tg-${t}"><span class="tgi">${d[0]}</span>${d[1]}</span>`;}).join('')}</div>`; }
+
+const tracks = { realm:{sym:'t-realm',nm:'Realm',v:6,max:14}, sorcery:{sym:'t-sorcery',nm:'Sorcery',v:4,max:14}, frontier:{sym:'t-frontier',nm:'Frontier',v:3,max:9} };
+const res = [['gold','Gold',42,'+20'],['wood','Wood',3,'+1'],['ore','Ore',5,'+1'],['crystal','Crystal',1,'+0'],['recruits','Recruits',4,'+2'],['mercury','Mercury',2,'+1']];
+const proc = {nm:'Week of the Griffin', tx:'The dwellings teem — each lord gains 2 Recruits.'};
+const hand = [
+  {nm:'Archangel Spire',cost:22,ty:'Structure',tyc:'structure',tags:['creature','might'],tx:'+2 Recruit prod. Advance Realm 1.',vp:3,play:true},
+  {nm:"Spellbinder's Hat",cost:9,ty:'Power',tyc:'power',tags:['magic','wealth'],tx:'Advance Sorcery → draw a card.',sig:true,play:true},
+  {nm:'Meteor Shower',cost:12,ty:'Spell',tyc:'spell',tags:['magic'],tx:'Advance Sorcery 2 steps.',play:true},
+  {nm:'Crag Hack',cost:9,ty:'Power',tyc:'power',tags:['hero','might'],tx:'Pay 3 Gold → 3 Recruits.',vp:1,sig:true,play:false},
+  {nm:'Black Dragon Cave',cost:21,ty:'Structure',tyc:'structure',tags:['dragon','magic'],tx:'+2 Recruit. Gain 2 Crystal.',vp:4,sig:true,play:false},
+  {nm:'Tavern',cost:3,ty:'Structure',tyc:'structure',tags:['building','wealth'],tx:'Gain 3 Gold. +1 Gold prod.',play:true},
+];
+const acts = [
+  ['Found Town','place a Town → +1 Realm, +Renown',[['gold',23]],true],
+  ['Clear a Region','+1 Frontier, +2 Gold plunder',[['gold',18]],true],
+  ['Flag a Mine','+1 production of that hex',[['gold',25]],false],
+  ['Build Mage Guild','+1 Mercury production',[['gold',11]],true],
+  ['Study Sorcery','+1 Sorcery, +Renown',[['gold',14]],true],
+];
+const conv = [
+  ['Muster Army → Town','place a Town → +1 Realm',[['recruits',8]],false],
+  ['Forge','spend 2 Ore → gain 3 Recruits',[['ore',2]],true],
+  ['Channel Mercury','+1 Sorcery, +Renown',[['mercury',8]],false],
+];
+const deeds = [['Master Builder','8+ Building tags',true,'Catherine'],['Archmage','5+ Magic tags',false,''],['Warlord','8+ Creature tags',false,'']];
+const honors = [['Treasurer','you lead'],['Grand Mage','rival leads']];
+const quests = [
+  {nm:'Clear the Cyclops Stockade',cost:'4 Ore · 4 Recruits',rw:'Gain 8 Gold; advance Frontier.',ready:true},
+  {nm:'Recover the Sword of Hellfire',cost:'4 Mercury',rw:'1★. SAGA: play Magic → 2 Gold.',ready:false},
+  {nm:'Rescue the Merchant Caravan',cost:'6 Gold',rw:'+2 Gold production.',ready:true},
+];
+const wonder = {nm:'The Grand Cathedral', stages:[
+  {n:'Lay the Foundation',done:true,m:'',r:'+1 Recruit prod; gain 4 Gold.'},
+  {n:'Raise the Nave',next:true,m:'Cost 14 Gold · 6 Ore · Needs Realm 5',r:'+2 Gold production.'},
+  {n:'Crown the Spire',m:'Cost 20 Gold · 8 Ore · Needs Realm 8',r:'+Realm. Forever: Building → 2 Gold.'},
+]};
+const logLines = ['Astrologers proclaim the Week of the Griffin.','Catherine plays Sawmill.','Catherine — Found Town.','Roland uses Sir Mullich.','Roland builds Lay the Foundation (1/3).','Catherine completes: Rescue the Caravan.'];
+const pct = t=>Math.round(100*t.v/t.max)+'%';
+const costHtml = arr => arr.map(c=>`${c[1]} ${ic(RICON[c[0]])}`).join(' ');
+
+function hexMap(){
+  const R=3,size=24; const cells=[];
+  for(let q=-R;q<=R;q++) for(let r=Math.max(-R,-q-R);r<=Math.min(R,-q+R);r++) cells.push([q,r]);
+  let mnX=1e9,mnY=1e9,mxX=-1e9,mxY=-1e9;
+  const pos=cells.map(([q,r])=>{const x=size*Math.sqrt(3)*(q+r/2),y=size*1.5*r; mnX=Math.min(mnX,x);mxX=Math.max(mxX,x);mnY=Math.min(mnY,y);mxY=Math.max(mxY,y);return[x,y];});
+  const pad=size+8, W=(mxX-mnX)+2*pad, H=(mxY-mnY)+2*pad;
+  const pts=(cx,cy)=>{let p=[];for(let i=0;i<6;i++){const a=Math.PI/180*(60*i-30);p.push((cx+size*Math.cos(a)).toFixed(1)+','+(cy+size*Math.sin(a)).toFixed(1));}return p.join(' ');};
+  const terr=['#5b8a3a','#4f7d31','#6b8f3f','#7a7a44','#8a6a3a','#46742c'];
+  const tok={'0,0':['t-realm',0],'1,-1':['r-ore',0],'-1,1':['flag',1],'2,0':['t-realm',1],'-2,1':['r-ore',0]};
+  let b='';
+  cells.forEach(([q,r],i)=>{const[x,y]=pos[i]; const col=terr[Math.abs(q*7+r*13+q*q)%terr.length];
+    b+=`<polygon points="${pts(x,y)}" fill="${col}" stroke="#21300f" stroke-width="1" stroke-linejoin="round"/>`;
+    b+=`<polygon points="${pts(x,y)}" fill="url(#shM)" stroke="none"/>`;
+    const tk=tok[q+','+r];
+    if(tk){const o=tk[1]; b+=`<circle cx="${x}" cy="${y}" r="${size*.6}" fill="${o?'#7a201a':'#23456e'}" stroke="${o?'#ffce9a':'#bcd8ff'}" stroke-width="2.6"/>`;
+      if(tk[0]==='flag'){b+=`<path d="M${x-1} ${y+7} V${y-8} l9 3 -9 3" fill="#e23b2e" stroke="#fff" stroke-width="1"/>`;}
+      else b+=`<use href="#${tk[0]}" x="${x-11}" y="${y-11}" width="22" height="22"/>`;}
+    else if((q+r)%3===0){ b+=`<use href="#${['r-crystal','r-wood','r-ore','r-mercury'][Math.abs(q+r*2)%4]}" x="${x-9}" y="${y-9}" width="18" height="18" opacity=".92"/>`; }
+  });
+  return `<svg class="hexmap" viewBox="${mnX-pad} ${mnY-pad} ${W} ${H}" style="aspect-ratio:${W}/${H}" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="shM" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff" stop-opacity=".26"/><stop offset="55%" stop-color="#fff" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".3"/></linearGradient></defs>${b}</svg>`;
+}
+
+function cardFace(c,opts){opts=opts||{};
+  return `<div class="card ${c.sig?'sig':''} ${opts.play&&!c.play?'dim':''} ${opts.keep?'keep':''}">
+    ${opts.keep!=null?`<div class="keepmark">${opts.keep?'✔':''}</div>`:''}
+    <div class="cc">${c.cost}</div><div class="cn">${c.nm}</div>
+    <div class="ty ${c.tyc}">${c.ty}${c.sig?' · Castle':''}</div>
+    ${tagChips(c.tags)}
+    <div class="tx">${c.tx}</div>${c.vp?`<div class="vp">★${c.vp}</div>`:''}</div>`;
+}
+
+/* ===== command tabs ===== */
+let activeTab='actions';
+function tabActions(){return `
+  <h4 class="gold">⚔ Your Turn</h4><div class="turn-hint">Play a card from the dock below, take actions, then End Turn.</div>
+  <div class="subhead">Adventure Map</div>
+  ${acts.map(a=>`<button class="btn" ${a[3]?'':'disabled'}>${a[0]}<span class="cost">${costHtml(a[2])}</span><small>${a[1]}</small></button>`).join('')}
+  <div class="subhead">Muster · Forge · Channel</div>
+  ${conv.map(a=>`<button class="btn" ${a[3]?'':'disabled'}>${a[0]}<span class="cost">${costHtml(a[2])}</span><small>${a[1]}</small></button>`).join('')}
+  <div class="subhead">Transmute 2 ${ic('r-mercury')} →</div>
+  <div class="row" style="gap:6px">${['gold','wood','ore','crystal','recruits'].map(k=>`<button class="btn-sm">${ic(RICON[k],'ic-lg')}</button>`).join('')}</div>`;}
+function tabWonder(){return `
+  <h4 class="gold">✦ Your Wonder</h4>
+  <div class="wname">${wonder.nm} <span style="color:var(--ink-dim); font-weight:400; font-size:12px">— 12★, ends the game</span></div>
+  ${wonder.stages.map((s,i)=>`<div class="wstage ${s.done?'done':''} ${s.next?'next':''}"><div class="wh"><b>${s.done?'✓ ':s.next?'▶ ':'🔒 '}${i+1}. ${s.n}</b>${s.next?'<button class="btn-sm">Build</button>':''}</div>${s.m?`<div class="wm">${s.m}</div>`:''}<div class="wr">→ ${s.r}</div></div>`).join('')}`;}
+function tabGoals(){return `
+  <h4 class="gold">🎯 Goals</h4>
+  <div class="subhead">Game-end trigger — the 3 Dominion tracks <span class="q">?<span class="tip">Maxing all three tracks does NOT win the game — it (or any player completing a Wonder) ENDS it after the current week. The winner is whoever holds the most Glory ★ at that point. So maxing the tracks just stops the clock; you can max them and still lose on Glory.</span></span></div>
+  ${Object.values(tracks).map(t=>`<div class="gtrack ${t.v>=t.max?'done':''}"><span class="lt">${ic(t.sym,'ic-lg')} ${t.nm}</span><b>${t.v}/${t.max}</b></div>`).join('')}
+  <div class="subhead">Public · Deeds (5★)</div>
+  ${deeds.map(g=>`<div class="goal"><span>🏅 ${g[0]} <span class="q">?<span class="tip">${g[1]}. Claim for 8 Gold; worth 5★.</span></span>${g[2]?`<span class="claimed"> — ${g[3]}</span>`:''}</span>${g[2]?'':'<button class="btn-sm">8 '+ic('r-gold')+'</button>'}</div>`).join('')}
+  <div class="subhead">Public · Honors (5★/2★)</div>
+  ${honors.map(g=>`<div class="goal"><span>🏆 ${g[0]} <small>${g[1]}</small></span><button class="btn-sm">8 ${ic('r-gold')}</button></div>`).join('')}
+  <div class="subhead">Private</div>
+  <div class="secret"><b>🤫 Secret: Emperor</b> <span style="color:var(--good); font-size:11px; float:right">✗ not yet</span><div class="wr">Reach Realm 12 · worth 6★</div></div>`;}
+function tabQuests(){return `
+  <h4 class="gold">🧭 Adventures</h4><div class="turn-hint">Complete one outright — meet its requirement & pay its cost.</div>
+  ${quests.map(qq=>`<div class="quest ${qq.ready?'ready':''}"><div class="qh"><b>${qq.nm}</b><button class="btn-sm" ${qq.ready?'':'disabled'}>Embark</button></div><div class="qc">Pay ${qq.cost}</div><div class="qr">→ ${qq.rw}</div></div>`).join('')}`;}
+function tabLog(){return `<h4 class="gold">📜 Chronicle</h4><div class="log">${logLines.map(l=>`<div class="${l.startsWith('Catherine')?'me':''}">${l}</div>`).join('')}</div>`;}
+const TABS=[['actions','t-realm','Actions',tabActions],['wonder','t-sorcery','Wonder',tabWonder],['goals','shield','Goals',tabGoals],['quests','t-frontier','Quests',tabQuests],['log','r-wood','Log',tabLog]];
+
+function screenGame(extra){
+  const jewels = Object.values(tracks).map(t=>`<div class="jewel">${ic(t.sym,'ic-lg').replace('ic-lg','').replace('class="ic "','class="orb" style="width:30px;height:30px"')}<div><div class="jt">${t.nm}</div><div class="jbar"><i style="width:${pct(t)}"></i></div><div class="jv">${t.v}/${t.max}</div></div></div>`).join('');
+  const statusbar = `<div class="statusbar">
+    <div class="crest"><svg class="shield" viewBox="0 0 34 38"><use href="#shield"/></svg><div class="nm gold">Conquest of Erathia</div></div>
+    <div class="week">Week 3 · Day 1</div>
+    <div class="jewels">${jewels}</div>
+    <div class="turnchip p0">Catherine's turn · ★34</div>
+    <button class="ghost">❔</button>
+  </div>`;
+  const tabsBar = `<div class="tabs">${TABS.map(t=>`<button class="tab ${t[0]===activeTab?'on':''}" data-tab="${t[0]}">${ic(t[1])}${t[2]}</button>`).join('')}</div>`;
+  const tabBody = `<div class="tabbody">${TABS.find(t=>t[0]===activeTab)[3]()}</div>`;
+
+  const oppbar = `<div class="oppbar">
+    <button class="chev">»</button><div class="pport">🧙</div><div class="onm">Roland</div><span style="color:var(--ink-dim); font-style:italic">Tower — board hidden</span>
+    <div class="mini-res">12 ${ic('r-gold')} · 6 ${ic('r-recruits')} · 3 ${ic('r-mercury')}</div>
+    <div class="ginfo">★ 29</div>
+  </div>`;
+
+  const dock = `<div class="dock"><div class="dock-inner">
+    <div style="flex:1">
+      <div class="handlabel">Catherine's Hand — click a card to play</div>
+      <div class="handfan">${hand.map((c,i)=>{const n=hand.length;const rot=(i-(n-1)/2)*1.6; const ty=Math.abs(i-(n-1)/2)*2;
+        return `<div style="transform:rotate(${rot}deg) translateY(${ty}px)">${cardFace(c,{play:true})}</div>`;}).join('')}</div>
+    </div>
+    <div class="dock-side">
+      <div class="ribbon">${res.map(r=>`<div class="rc">${ic(RICON[r[0]],'ic-lg')}<span class="amt">${r[2]}</span><span class="pr ${r[3][0]==='-'?'neg':''}">${r[3]}</span></div>`).join('')}</div>
+      <div class="dock-btns"><button class="btn gild">End Turn ▶</button><button class="btn red">💤 Pass</button></div>
+    </div>
+  </div></div>`;
+
+  return `<div class="app">
+    ${statusbar}
+    <div class="proclaim">☄ Astrologers proclaim the <b>${proc.nm}</b> — <i>${proc.tx}</i></div>
+    <div class="stage">
+      <div class="mapframe"><h3 class="gold">The Adventure Map</h3>${hexMap()}<div class="maplegend">Towns & Mines you hold are ringed in your colour · small icons mark mine resources & bonuses</div></div>
+      <div class="command">${tabsBar}${tabBody}</div>
+    </div>
+    ${oppbar}
+  </div>${dock}` + (extra||'');
+}
+
+/* ===== other screens ===== */
+function box(inner){ return `<div class="fbox ornate"><span class="fcorner tl"></span><span class="fcorner tr"></span><span class="fcorner bl"></span><span class="fcorner br"></span>${inner}</div>`; }
+function screenTitle(){ return `<div class="fs">${box(`
+  <div class="hero"><h1 class="gold">Conquest of Erathia</h1><div class="sub">A Heroes of Might &amp; Magic III engine-builder · 2-player hot-seat</div></div>
+  <div class="row" style="margin:24px 0; justify-content:center">
+    <label class="fld">Player 1 name<input value="Catherine"></label>
+    <label class="fld">Player 2 name<input value="Roland"></label>
+    <label class="fld">Seed (optional)<input placeholder="random" style="width:130px"></label></div>
+  <div class="row center"><button class="btn gild" style="width:auto; padding:14px 34px; font-size:17px">⚔ Begin the Conquest</button></div>
+  <div style="text-align:center; margin-top:16px"><a href="cards.html">View the card gallery ▸</a></div>`)}</div>`; }
+function screenRoll(){ return `<div class="fs">${box(`<div style="text-align:center; max-width:560px; margin:0 auto">
+  <h2 class="gold">🎲 Rolling the D12 for First Player</h2><p style="color:var(--ink-dim)">1–6 → Catherine · 7–12 → Roland</p>
+  <div class="die">4</div><div style="font-size:22px; margin:14px 0; color:var(--blue)" class="cz">⚔ Catherine commands the first move!</div>
+  <button class="btn gild" style="width:auto; padding:13px 28px; margin:0 auto">To the Towns ▶</button></div>`)}</div>`; }
+function screenDraft(){ const towns=[
+  ['Castle','Knights, Cavaliers & Archangels — order and stone.','Start 47 Gold, +1 Recruit prod. Dwelling cards cost 2 Gold less.'],
+  ['Tower','Wizards of Bracada, Genies, Nagas, Titans.','Start 40 Gold, 3 Mercury, +1 Crystal prod. Magic cards −3.'],
+  ['Necropolis','Skeletons, Vampires, Liches — death given purpose.','Start 38 Gold, 4 Recruits. Necromancy: discard → +1 Recruit.']];
+  return `<div class="fs">${box(`<h2 class="gold" style="text-align:center">Catherine, choose your Town</h2>
+  <p style="color:var(--ink-dim); text-align:center">Your Town sets your start, a unique advantage, and a deck of signature heroes only you can recruit.</p>
+  <div class="draft-grid">${towns.map(t=>`<div class="fcard"><h3>${t[0]}</h3><div class="bl">${t[1]}</div><div class="de">${t[2]}</div></div>`).join('')}</div>`)}</div>`; }
+function screenResearch(){ const pool=[hand[0],hand[1],hand[2],hand[4],{nm:'Marketplace',cost:8,ty:'Structure',tyc:'structure',tags:['building','wealth'],tx:'+1 Gold prod. Draw a card.'},{nm:'Town Portal',cost:4,ty:'Spell',tyc:'spell',tags:['magic'],tx:'Gain 9 Gold.'}]; const keep=[true,true,false,false,true,false];
+  return `<div class="fs">${box(`<h2 class="gold">Catherine (Castle) — Research</h2>
+  <p style="color:var(--ink-dim)">Click cards to keep (3 Gold each). Gold-titled cards are your Town's signature units.</p>
+  <div class="research-grid">${pool.map((c,i)=>cardFace(c,{keep:keep[i]})).join('')}</div>
+  <div class="row center" style="margin-top:14px"><div>Keeping <b>3</b> for <b style="color:var(--gold-l)">9 ${ic('r-gold')}</b> · You have 42 ${ic('r-gold')}</div><button class="btn gild" style="width:auto; padding:11px 26px">Confirm ▶</button></div>`)}</div>`; }
+function screenModal(){ const c=hand[0];
+  return screenGame(`<div class="overlay">${box(`<h2 class="gold">${c.nm}</h2><div class="row">${cardFace(c)}
+    <div style="flex:1; min-width:230px"><p style="color:var(--ink-dim)">Base cost 22 Gold</p>
+    <div class="pay-row"><div style="min-width:180px">Use ${ic('r-ore')} Ore (2 Gold each):</div><div class="stepper"><button class="ghost">−</button><b>0</b><button class="ghost">+</button></div></div>
+    <p>Pay <b style="color:var(--gold-l)">22 ${ic('r-gold')}</b> (you have 42)</p></div></div>
+    <div class="row" style="justify-content:flex-end; margin-top:14px"><button class="ghost">Cancel</button><button class="btn red" style="width:auto; padding:9px 16px">Sell for 2</button><button class="btn gild" style="width:auto; padding:9px 22px">▶ Play</button></div>`)}</div>`); }
+function screenHandoff(){ return screenGame(`<div class="overlay">${box(`<div class="handoff"><div style="color:var(--ink-dim)">🛡 Hot-seat — pass the device</div><div class="who gold">Roland</div><div style="color:var(--ink-dim); font-size:18px; margin-bottom:18px">Week 3 — your turn</div><button class="btn gild" style="width:auto; padding:13px 32px; margin:0 auto">Reveal ▶</button></div>`)}</div>`); }
+function screenOver(){ const cols=['Lord','Renown','Cards','Map','Spells','Deeds','Honors','Secret','Wonder','Glory'];
+  const rows=[['👑 Catherine (Castle)',23,9,5,2,5,5,6,12,'67',true],['Roland (Tower)',21,7,3,4,0,2,0,0,'37',false]];
+  return `<div class="fs">${box(`<h1 class="gold" style="text-align:center; font-size:34px">👑 Catherine wins Erathia!</h1>
+  <p style="color:var(--ink-dim); text-align:center">Final Glory 67 after 14 weeks — completed The Grand Cathedral.</p>
+  <table class="score-table"><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr>
+  ${rows.map(r=>`<tr class="${r[10]?'winrow':''}">${r.slice(0,10).map((v,i)=>i===9?`<td class="total">${v}</td>`:`<td>${v}</td>`).join('')}</tr>`).join('')}</table>
+  <div class="row center" style="margin-top:16px"><button class="btn gild" style="width:auto; padding:13px 30px">✦ New Game</button></div>`)}</div>`; }
+
+const screens={title:screenTitle,roll:screenRoll,draft:screenDraft,research:screenResearch,game:screenGame,modal:screenModal,handoff:screenHandoff,over:screenOver};
+const root=document.getElementById('root'); let cur='game';
+function bindTabs(){ root.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{ activeTab=b.dataset.tab; render(); })); }
+function render(){ root.innerHTML=screens[cur](); if(cur==='game'||cur==='modal'||cur==='handoff') bindTabs(); window.scrollTo(0,0); }
+function show(p){ cur=p; document.querySelectorAll('.phasenav button').forEach(b=>b.classList.toggle('on',b.dataset.p===p)); render(); }
+document.querySelectorAll('.phasenav button').forEach(b=>b.addEventListener('click',()=>show(b.dataset.p)));
+show('game');
+})();
+</script>
+</body>
+</html>

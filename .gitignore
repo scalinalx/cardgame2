@@ -1,0 +1,14 @@
+# Card-art images are large (~854MB) and kept local, not in the repo.
+# Regenerate the manifest after adding images locally: node tools/genimages.js
+imgs/
+
+# Local editor / tooling config (allowlists etc.)
+.claude/
+
+# OS / editor junk
+.DS_Store
+*.log
+Thumbs.db
+
+# Node (none currently — hygiene)
+node_modules/

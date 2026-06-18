@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Conquest of Erathia — Card Gallery</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    /* gallery-only styles */
+    body { padding-bottom: 60px; }
+    .gal-wrap { max-width: 1500px; margin: 0 auto; padding: 16px 18px 40px; }
+    .gal-head { text-align: center; margin-bottom: 14px; }
+    .gal-head h1 { color: var(--gold); margin: 0; font-size: clamp(24px, 4vw, 40px);
+      text-shadow: 0 2px 0 #000, 0 0 22px rgba(232,195,74,.3); }
+    .gal-head .sub { color: #cbb98a; font-style: italic; margin-top: 6px; }
+    .gal-head a { color: #9fb6e0; }
+    .toolbar { position: sticky; top: 0; z-index: 20; background: linear-gradient(#26232ef2, #20202af2);
+      backdrop-filter: blur(4px); border: 1px solid var(--stone-line); border-radius: 12px;
+      padding: 10px 14px; margin-bottom: 16px; box-shadow: var(--shadow); }
+    .filter-row { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+    .filter-group { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .filter-group .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: #9c916f; margin-right: 2px; }
+    .chip { font-family: inherit; cursor: pointer; border: 1px solid var(--stone-line); border-radius: 16px;
+      padding: 4px 11px; font-size: 13px; background: #1d1b25; color: #e3dbc6; transition: all .1s; }
+    .chip:hover { border-color: var(--gold); }
+    .chip.on { background: var(--gold); color: #2a2014; border-color: var(--gold); font-weight: 700; }
+    .search { font-family: inherit; padding: 6px 12px; border-radius: 16px; border: 1px solid var(--stone-line);
+      background: #1d1b25; color: #f1ecdd; font-size: 14px; min-width: 200px; }
+    .count { margin-left: auto; color: #cbbd92; font-size: 13px; white-space: nowrap; }
+    .gal-section { margin: 22px 0 8px; color: var(--gold); font-size: 18px; border-bottom: 1px solid var(--stone-line);
+      padding-bottom: 5px; display: flex; align-items: baseline; gap: 10px; }
+    .gal-section small { color: #9c916f; font-weight: 400; font-size: 13px; }
+    .gal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+    /* card face (mirrors the in-game look, standalone so this page needs no ui.js) */
+    .gc { position: relative; border-radius: 10px; border: 1px solid var(--stone-line);
+      background: linear-gradient(#3b3543, #2a2632); box-shadow: var(--shadow); padding: 10px; }
+    .gc.t-auto   { border-left: 4px solid #4f8f5a; }
+    .gc.t-active { border-left: 4px solid #4f7fd6; }
+    .gc.t-event  { border-left: 4px solid #c264c2; }
+    .gc.sig { box-shadow: var(--shadow), 0 0 0 1px rgba(232,195,74,.35); }
+    .gc .chead { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+    .gc .cname { font-weight: 700; color: #f3ecd6; font-size: 14px; line-height: 1.15; }
+    .gc.sig .cname { color: var(--gold); }
+    .gc .ccost { background: var(--gold); color: #2a2014; border-radius: 50%; width: 28px; height: 28px;
+      flex: 0 0 auto; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; }
+    .gc .ctype { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; margin-top: 3px; }
+    .gc .ctype.auto { color: #74c47e; } .gc .ctype.active { color: #6fa8e6; } .gc .ctype.event { color: #d98ad9; }
+    .gc .ctags { display: flex; gap: 4px; flex-wrap: wrap; margin: 6px 0; }
+    .gc .tg { font-size: 11px; padding: 1px 6px; border-radius: 10px; background: #1d1b25; border: 1px solid var(--stone-line); color: #cdbf95; }
+    .gc .ctext { font-size: 12px; color: #ddd3ba; line-height: 1.35; min-height: 42px; }
+    .gc .creq { font-size: 11px; color: #d9655f; margin-top: 4px; }
+    .gc .cvp { position: absolute; bottom: 8px; right: 10px; color: var(--gold); font-weight: 800; font-size: 13px; }
+    .empty { color: #cbbd92; text-align: center; padding: 40px; font-style: italic; }
+  </style>
+</head>
+<body>
+  <div class="gal-wrap">
+    <div class="gal-head">
+      <h1>⚔️ Conquest of Erathia — Card Gallery</h1>
+      <div class="sub">Every card in the game · <a href="index.html">▶ Play the game</a></div>
+    </div>
+    <div class="toolbar">
+      <div class="filter-row" style="margin-bottom:8px">
+        <div class="filter-group"><span class="lbl">Type</span><span id="typeFilters"></span></div>
+        <input class="search" id="search" placeholder="🔎 Search name or text…" />
+        <span class="count" id="count"></span>
+      </div>
+      <div class="filter-row" style="margin-bottom:8px">
+        <div class="filter-group"><span class="lbl">Tag</span><span id="tagFilters"></span></div>
+      </div>
+      <div class="filter-row">
+        <div class="filter-group"><span class="lbl">Source</span><span id="facFilters"></span></div>
+      </div>
+    </div>
+    <div id="gallery"></div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script>
+  (function () {
+    'use strict';
+    const D = window.HK.data;
+    const { CARDS, RES_INFO, TAG_INFO, TILE_INFO, CARD_FACTION, factionById } = D;
+
+    const TYPE_LABEL = { auto: 'Structure', active: 'Power', event: 'Spell' };
+    const TYPE_ORDER = ['auto', 'active', 'event'];
+
+    const state = { type: 'all', tag: 'all', fac: 'all', q: '' };
+
+    /* ---- filter chips ---- */
+    function chip(label, active, onClick) {
+      const b = document.createElement('button');
+      b.className = 'chip' + (active ? ' on' : '');
+      b.textContent = label;
+      b.addEventListener('click', onClick);
+      return b;
+    }
+    function renderFilters() {
+      // type
+      const tf = document.getElementById('typeFilters'); tf.innerHTML = '';
+      tf.appendChild(chip('All', state.type === 'all', () => { state.type = 'all'; render(); }));
+      for (const t of TYPE_ORDER) tf.appendChild(chip(TYPE_LABEL[t], state.type === t, () => { state.type = t; render(); }));
+      // tag
+      const gf = document.getElementById('tagFilters'); gf.innerHTML = '';
+      gf.appendChild(chip('All', state.tag === 'all', () => { state.tag = 'all'; render(); }));
+      for (const tg in TAG_INFO) gf.appendChild(chip(TAG_INFO[tg].icon + ' ' + TAG_INFO[tg].name, state.tag === tg, () => { state.tag = tg; render(); }));
+      // source: public + each faction
+      const ff = document.getElementById('facFilters'); ff.innerHTML = '';
+      ff.appendChild(chip('All', state.fac === 'all', () => { state.fac = 'all'; render(); }));
+      ff.appendChild(chip('🌍 Public', state.fac === 'public', () => { state.fac = 'public'; render(); }));
+      for (const f of D.FACTIONS) ff.appendChild(chip(f.name, state.fac === f.id, () => { state.fac = f.id; render(); }));
+    }
+
+    /* ---- requirement text ---- */
+    function reqText(r) {
+      const parts = [];
+      if (r.realmMin != null) parts.push('Realm ' + r.realmMin + '+');
+      if (r.sorceryMin != null) parts.push('Sorcery ' + r.sorceryMin + '+');
+      if (r.frontierMin != null) parts.push('Frontier ' + r.frontierMin + '+');
+      if (r.tags) for (const t in r.tags) parts.push(r.tags[t] + ' ' + (TAG_INFO[t] ? TAG_INFO[t].name : t));
+      if (r.prod) for (const k in r.prod) parts.push(r.prod[k] + ' ' + RES_INFO[k].name + ' prod');
+      return parts.join(', ');
+    }
+    function vpText(card) {
+      const v = card.vp;
+      if (v == null) return null;
+      if (typeof v === 'number') return v + ' VP';
+      if (v.perStore) return '1★ / ' + v.perStore + ' counters';
+      if (v.perTag) return '1★ / ' + v.perTag.per + ' ' + (TAG_INFO[v.perTag.tag] ? TAG_INFO[v.perTag.tag].name : v.perTag.tag);
+      if (v.perTile) return '1★ / ' + v.perTile.per + ' ' + (TILE_INFO[v.perTile.tile] ? TILE_INFO[v.perTile.tile].name : v.perTile.tile);
+      return '★';
+    }
+
+    /* ---- card face ---- */
+    function cardFace(card) {
+      const fac = CARD_FACTION[card.id];
+      const el = document.createElement('div');
+      el.className = 'gc t-' + card.type + (fac ? ' sig' : '');
+      const tags = (card.tags || []).map(t => `<span class="tg">${TAG_INFO[t] ? TAG_INFO[t].icon + ' ' + TAG_INFO[t].name : t}</span>`).join('');
+      const vp = vpText(card);
+      el.innerHTML =
+        `<div class="chead"><div class="cname">${card.name}</div><div class="ccost">${card.cost}</div></div>` +
+        `<div class="ctype ${card.type}">${TYPE_LABEL[card.type]}${fac ? ' · ' + factionById(fac).name : ' · Public'}</div>` +
+        `<div class="ctags">${tags}</div>` +
+        `<div class="ctext">${card.text || ''}</div>` +
+        (card.req ? `<div class="creq">⚑ ${reqText(card.req)}</div>` : '') +
+        (vp ? `<div class="cvp">★ ${vp}</div>` : '');
+      return el;
+    }
+
+    /* ---- filtering + grouping ---- */
+    function matches(card) {
+      if (state.type !== 'all' && card.type !== state.type) return false;
+      if (state.tag !== 'all' && !(card.tags || []).includes(state.tag)) return false;
+      const fac = CARD_FACTION[card.id];
+      if (state.fac === 'public' && fac) return false;
+      if (state.fac !== 'all' && state.fac !== 'public' && fac !== state.fac) return false;
+      if (state.q) {
+        const q = state.q.toLowerCase();
+        if (!(card.name.toLowerCase().includes(q) || (card.text || '').toLowerCase().includes(q))) return false;
+      }
+      return true;
+    }
+
+    function render() {
+      renderFilters();
+      const list = CARDS.filter(matches);
+      document.getElementById('count').textContent = list.length + ' of ' + CARDS.length + ' cards';
+      const gal = document.getElementById('gallery');
+      gal.innerHTML = '';
+      if (!list.length) { gal.innerHTML = '<div class="empty">No cards match these filters.</div>'; return; }
+      // group by type for readability
+      for (const t of TYPE_ORDER) {
+        const group = list.filter(c => c.type === t);
+        if (!group.length) continue;
+        group.sort((a, b) => a.cost - b.cost || a.name.localeCompare(b.name));
+        const h = document.createElement('div');
+        h.className = 'gal-section';
+        h.innerHTML = `${TYPE_LABEL[t]}s <small>${group.length} card${group.length === 1 ? '' : 's'}</small>`;
+        gal.appendChild(h);
+        const grid = document.createElement('div');
+        grid.className = 'gal-grid';
+        for (const c of group) grid.appendChild(cardFace(c));
+        gal.appendChild(grid);
+      }
+    }
+
+    document.getElementById('search').addEventListener('input', e => { state.q = e.target.value.trim(); render(); });
+    render();
+  })();
+  </script>
+</body>
+</html>

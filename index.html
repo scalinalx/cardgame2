@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Conquest of Erathia — The Card Game</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Title / setup / research / game / gameover screens are rendered here -->
+    <div id="screen"></div>
+    <!-- Full-screen overlay used for hot-seat hand-offs and modals -->
+    <div id="overlay" class="hidden"></div>
+  </div>
+  <!-- single body-level tooltip bubble (never clipped by panels) -->
+  <div id="floattip"></div>
+
+  <!-- classic scripts so the game runs directly from file:// with no build step -->
+  <script src="js/data.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/cardimages.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

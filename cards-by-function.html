@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Conquest of Erathia — Cards by Function</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    body { padding-bottom: 60px; }
+    .gal-wrap { max-width: 1500px; margin: 0 auto; padding: 16px 18px 40px; }
+    .gal-head { text-align: center; margin-bottom: 14px; }
+    .gal-head h1 { color: var(--gold); margin: 0; font-size: clamp(22px, 4vw, 38px);
+      text-shadow: 0 2px 0 #000, 0 0 22px rgba(232,195,74,.3); }
+    .gal-head .sub { color: #cbb98a; font-style: italic; margin-top: 6px; }
+    .gal-head a { color: #9fb6e0; }
+    .toolbar { position: sticky; top: 0; z-index: 20; background: linear-gradient(#26232ef2, #20202af2);
+      backdrop-filter: blur(4px); border: 1px solid var(--stone-line); border-radius: 12px;
+      padding: 10px 14px; margin-bottom: 16px; box-shadow: var(--shadow); }
+    .filter-row { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+    .search { font-family: inherit; padding: 6px 12px; border-radius: 16px; border: 1px solid var(--stone-line);
+      background: #1d1b25; color: #f1ecdd; font-size: 14px; min-width: 220px; }
+    .count { margin-left: auto; color: #cbbd92; font-size: 13px; white-space: nowrap; }
+    .index { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; max-height: 150px; overflow-y: auto; }
+    .index a { font-size: 12px; text-decoration: none; border: 1px solid var(--stone-line); border-radius: 14px;
+      padding: 3px 9px; background: #1d1b25; color: #e3dbc6; }
+    .index a:hover { border-color: var(--gold); color: var(--gold); }
+    .gal-section { margin: 26px 0 8px; color: var(--gold); font-size: 18px; border-bottom: 1px solid var(--stone-line);
+      padding-bottom: 5px; display: flex; align-items: baseline; gap: 10px; scroll-margin-top: 150px; }
+    .gal-section small { color: #9c916f; font-weight: 400; font-size: 13px; }
+    .gal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+    .gc { position: relative; border-radius: 10px; border: 1px solid var(--stone-line);
+      background: linear-gradient(#3b3543, #2a2632); box-shadow: var(--shadow); padding: 10px 10px 26px; }
+    .gc.t-auto   { border-left: 4px solid #4f8f5a; }
+    .gc.t-active { border-left: 4px solid #4f7fd6; }
+    .gc.t-event  { border-left: 4px solid #c264c2; }
+    .gc.sig { box-shadow: var(--shadow), 0 0 0 1px rgba(232,195,74,.35); }
+    .gc .chead { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+    .gc .cname { font-weight: 700; color: #f3ecd6; font-size: 14px; line-height: 1.15; }
+    .gc.sig .cname { color: var(--gold); }
+    .gc .ccost { background: var(--gold); color: #2a2014; border-radius: 50%; width: 28px; height: 28px;
+      flex: 0 0 auto; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; }
+    .gc .ctype { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; margin-top: 3px; }
+    .gc .ctype.auto { color: #74c47e; } .gc .ctype.active { color: #6fa8e6; } .gc .ctype.event { color: #d98ad9; }
+    .gc .ctags { display: flex; gap: 4px; flex-wrap: wrap; margin: 6px 0; }
+    .gc .tg { font-size: 11px; padding: 1px 6px; border-radius: 10px; background: #1d1b25; border: 1px solid var(--stone-line); color: #cdbf95; }
+    .gc .ctext { font-size: 12px; color: #ddd3ba; line-height: 1.35; min-height: 42px; }
+    .gc .cvp { position: absolute; bottom: 8px; right: 10px; color: var(--gold); font-weight: 800; font-size: 13px; }
+    .empty { color: #cbbd92; text-align: center; padding: 40px; font-style: italic; }
+  </style>
+</head>
+<body>
+  <div class="gal-wrap">
+    <div class="gal-head">
+      <h1>⚙️ Cards by Function</h1>
+      <div class="sub">Every card grouped by <b>exactly what it does</b> — a card appears under each effect it has ·
+        <a href="cards.html">Card gallery</a> · <a href="index.html">▶ Play</a></div>
+    </div>
+    <div class="toolbar">
+      <div class="filter-row">
+        <input class="search" id="search" placeholder="🔎 Filter by name or text…" />
+        <span class="count" id="count"></span>
+      </div>
+      <div class="index" id="index"></div>
+    </div>
+    <div id="gallery"></div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script>
+  (function () {
+    'use strict';
+    const D = window.HK.data;
+    const { CARDS, RES_INFO, TAG_INFO, TILE_INFO, CARD_FACTION, factionById } = D;
+    const TYPE_LABEL = { auto: 'Structure', active: 'Power', event: 'Spell' };
+
+    // Resource → bucket-label fragments. Wood/Crystal are the DISCOUNT TRACKS now.
+    const PROD = { gold: 'Increase Gold production', ore: 'Increase Ore production',
+      recruits: 'Increase Recruit production', mercury: 'Increase Mercury production',
+      wood: 'Raise Sawmill (Building discount)', crystal: 'Raise Mana Vault (Magic discount)' };
+    const GAIN = { gold: 'Instant Gold', ore: 'Instant Ore', recruits: 'Instant Recruits',
+      mercury: 'Instant Mercury', wood: 'Instant Sawmill', crystal: 'Instant Mana Vault' };
+    const GLOBAL = { realm: 'Advance Realm', sorcery: 'Advance Sorcery', frontier: 'Advance Frontier' };
+    const WHEN = { onPlayTag: 'when you play a matching tag', onRaiseGlobal: 'when you advance a track',
+      onDiscard: 'when you discard a card' };
+
+    // Icons per bucket (default • if unmapped — nothing is ever dropped for a missing icon).
+    const ICON = {
+      'Increase Gold production': '🪙', 'Increase Ore production': '🪨', 'Increase Recruit production': '⚔️',
+      'Increase Mercury production': '⚗️', 'Raise Sawmill (Building discount)': '🪵', 'Raise Mana Vault (Magic discount)': '💎',
+      'Instant Gold': '🪙', 'Instant Ore': '🪨', 'Instant Recruits': '⚔️', 'Instant Mercury': '⚗️',
+      'Instant Sawmill': '🪵', 'Instant Mana Vault': '💎',
+      'Scaling: instant resources per tag': '📈', 'Scaling: production per tag': '📈', 'Scaling: instant resources per map tile': '🗺️',
+      'Advance Realm': '🏰', 'Advance Sorcery': '🔮', 'Advance Frontier': '🗺️',
+      'Draw cards': '🃏', 'Gain Renown': '🎖️', 'Instant Victory Points': '★',
+      'Action → convert resources (pay X → gain Y)': '🔁', 'Action → boost production': '📈',
+      'Action → draw cards': '🃏', 'Action → advance a Dominion track': '🔮', 'Action → gain Victory Points': '★',
+      'Action → gain Renown': '🎖️', 'Action → attack the opponent': '💥', 'Action → scaling gain': '📊',
+      'Attack: lower opponent production': '💥', 'Attack: drain opponent resources': '💥',
+      'Scores flat end-game VP': '★', 'Scores VP per tag': '★', 'Scores VP per map tile': '★', 'Scores VP per stored counter': '★',
+      'Protects you from attacks': '🛡️', 'No parsed effect': '◦',
+    };
+    const ongoing = (verb, type) => 'Ongoing: ' + verb + ' ' + (WHEN[type] || 'on a trigger');
+    // Preferred display order (prefixes). Any bucket not listed is appended (alphabetical) — never dropped.
+    const ORDER = [
+      'Increase Gold production', 'Increase Ore production', 'Increase Recruit production', 'Increase Mercury production',
+      'Raise Sawmill (Building discount)', 'Raise Mana Vault (Magic discount)',
+      'Instant Gold', 'Instant Ore', 'Instant Recruits', 'Instant Mercury', 'Instant Sawmill', 'Instant Mana Vault',
+      'Scaling: instant resources per tag', 'Scaling: production per tag', 'Scaling: instant resources per map tile',
+      'Advance Realm', 'Advance Sorcery', 'Advance Frontier',
+      'Draw cards', 'Gain Renown', 'Instant Victory Points',
+      'Action → convert resources (pay X → gain Y)', 'Action → boost production', 'Action → draw cards',
+      'Action → advance a Dominion track', 'Action → gain Victory Points', 'Action → gain Renown',
+      'Action → attack the opponent', 'Action → scaling gain',
+      ongoing('gain resources', 'onPlayTag'), ongoing('draw a card', 'onPlayTag'), ongoing('stockpile a scoring counter', 'onPlayTag'),
+      ongoing('gain resources', 'onRaiseGlobal'), ongoing('draw a card', 'onRaiseGlobal'), ongoing('stockpile a scoring counter', 'onRaiseGlobal'),
+      ongoing('gain resources', 'onDiscard'), ongoing('draw a card', 'onDiscard'), ongoing('stockpile a scoring counter', 'onDiscard'),
+      'Attack: lower opponent production', 'Attack: drain opponent resources',
+      'Scores flat end-game VP', 'Scores VP per tag', 'Scores VP per map tile', 'Scores VP per stored counter',
+      'Protects you from attacks', 'No parsed effect',
+    ];
+
+    // Return the set of specific function-bucket labels a card belongs to.
+    function buckets(c) {
+      const out = new Set();
+      const ops = typeof c.effects === 'function' ? (() => { try { return c.effects(); } catch (e) { return []; } })() : (c.effects || []);
+      for (const op of ops) {
+        if (op.prod) for (const k in op.prod) out.add(PROD[k] || ('Increase ' + (RES_INFO[k] ? RES_INFO[k].name : k) + ' production'));
+        if (op.gain) for (const k in op.gain) out.add(GAIN[k] || ('Instant ' + (RES_INFO[k] ? RES_INFO[k].name : k)));
+        if (op.global) for (const p in op.global) out.add(GLOBAL[p] || ('Advance ' + p));
+        if (op.renown != null) out.add('Gain Renown');
+        if (op.draw) out.add('Draw cards');
+        if (op.vpNow) out.add('Instant Victory Points');
+        if (op.gainPerTag) out.add('Scaling: instant resources per tag');
+        if (op.prodPerTag) out.add('Scaling: production per tag');
+        if (op.gainPerTile) out.add('Scaling: instant resources per map tile');
+        if (op.attackProd) out.add('Attack: lower opponent production');
+        if (op.attackRes) out.add('Attack: drain opponent resources');
+        if (op.addTrigger) {
+          const t = op.addTrigger.type, eff = op.addTrigger.effect || [];
+          if (eff.some(e => e.gain)) out.add(ongoing('gain resources', t));
+          if (eff.some(e => e.draw)) out.add(ongoing('draw a card', t));
+          if (eff.some(e => e.store != null)) out.add(ongoing('stockpile a scoring counter', t));
+          if (!eff.length) out.add(ongoing('trigger an effect', t));
+        }
+        if (op.addAction) {
+          for (const e of (op.addAction.effect || [])) {
+            if (e.gain) out.add('Action → convert resources (pay X → gain Y)');
+            if (e.prod) out.add('Action → boost production');
+            if (e.draw) out.add('Action → draw cards');
+            if (e.global) { out.add('Action → advance a Dominion track'); for (const p in e.global) out.add(GLOBAL[p] || ('Advance ' + p)); }
+            if (e.vpNow) out.add('Action → gain Victory Points');
+            if (e.renown != null) out.add('Action → gain Renown');
+            if (e.attackProd || e.attackRes) out.add('Action → attack the opponent');
+            if (e.gainPerTag || e.prodPerTag || e.gainPerTile) out.add('Action → scaling gain');
+          }
+        }
+      }
+      const v = c.vp;
+      if (v != null) {
+        if (typeof v === 'number') out.add('Scores flat end-game VP');
+        else if (v.perTag) out.add('Scores VP per tag');
+        else if (v.perTile) out.add('Scores VP per map tile');
+        else if (v.perStore) out.add('Scores VP per stored counter');
+        else out.add('Scores flat end-game VP');
+      }
+      if (c.protect) out.add('Protects you from attacks');
+      if (!out.size) out.add('No parsed effect');
+      return out;
+    }
+
+    const tagged = CARDS.map(c => ({ c, set: buckets(c) }));
+
+    function vpText(card) {
+      const v = card.vp;
+      if (v == null) return null;
+      if (typeof v === 'number') return v + ' VP';
+      if (v.perStore) return '1★ / ' + v.perStore + ' counters';
+      if (v.perTag) return '1★ / ' + v.perTag.per + ' ' + (TAG_INFO[v.perTag.tag] ? TAG_INFO[v.perTag.tag].name : v.perTag.tag);
+      if (v.perTile) return '1★ / ' + v.perTile.per + ' ' + (TILE_INFO[v.perTile.tile] ? TILE_INFO[v.perTile.tile].name : v.perTile.tile);
+      return '★';
+    }
+    function cardFace(card) {
+      const fac = CARD_FACTION[card.id];
+      const el = document.createElement('div');
+      el.className = 'gc t-' + card.type + (fac ? ' sig' : '');
+      const tags = (card.tags || []).map(t => `<span class="tg">${TAG_INFO[t] ? TAG_INFO[t].icon + ' ' + TAG_INFO[t].name : t}</span>`).join('');
+      const vp = vpText(card);
+      el.innerHTML =
+        `<div class="chead"><div class="cname">${card.name}</div><div class="ccost">${card.cost}</div></div>` +
+        `<div class="ctype ${card.type}">${TYPE_LABEL[card.type]}${fac ? ' · ' + factionById(fac).name : ' · Public'}</div>` +
+        `<div class="ctags">${tags}</div>` +
+        `<div class="ctext">${card.text || ''}</div>` +
+        (vp ? `<div class="cvp">★ ${vp}</div>` : '');
+      return el;
+    }
+
+    const anchor = lbl => 'b-' + lbl.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const ord = lbl => { const i = ORDER.indexOf(lbl); return i < 0 ? 1e9 : i; };
+
+    function render() {
+      const q = document.getElementById('search').value.trim().toLowerCase();
+      const match = c => !q || c.name.toLowerCase().includes(q) || (c.text || '').toLowerCase().includes(q);
+      const gal = document.getElementById('gallery'); gal.innerHTML = '';
+      const idx = document.getElementById('index'); idx.innerHTML = '';
+      // every bucket that actually has a (matching) card — sorted by preferred order, unknowns appended
+      const present = [...new Set(tagged.filter(t => match(t.c)).flatMap(t => [...t.set]))]
+        .sort((a, b) => ord(a) - ord(b) || a.localeCompare(b));
+      let total = 0;
+      for (const label of present) {
+        const group = tagged.filter(t => t.set.has(label) && match(t.c)).map(t => t.c);
+        group.sort((a, b) => a.cost - b.cost || a.name.localeCompare(b.name));
+        total += group.length;
+        const icon = ICON[label] || '•';
+        const a = document.createElement('a'); a.href = '#' + anchor(label);
+        a.textContent = icon + ' ' + label + ' (' + group.length + ')'; idx.appendChild(a);
+        const h = document.createElement('div'); h.className = 'gal-section'; h.id = anchor(label);
+        h.innerHTML = `${icon} ${label} <small>${group.length} card${group.length === 1 ? '' : 's'}</small>`;
+        gal.appendChild(h);
+        const grid = document.createElement('div'); grid.className = 'gal-grid';
+        for (const c of group) grid.appendChild(cardFace(c));
+        gal.appendChild(grid);
+      }
+      document.getElementById('count').textContent = present.length + ' functions · ' + total + ' listings';
+      if (!present.length) gal.innerHTML = '<div class="empty">No cards match.</div>';
+    }
+
+    document.getElementById('search').addEventListener('input', render);
+    render();
+  })();
+  </script>
+</body>
+</html>
