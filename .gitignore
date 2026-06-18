@@ -1,6 +1,7 @@
-# Card-art images are large (~854MB) and kept local, not in the repo.
-# Regenerate the manifest after adding images locally: node tools/genimages.js
-imgs/
+# The repo ships the Full-HD optimized imgs/ (~66MB). The 4K print masters and the
+# optimizer's scratch output stay LOCAL. Re-optimize: bash tools/optimize-images.sh ; node tools/genimages.js
+imgs_print/
+imgs_web/
 
 # Local editor / tooling config (allowlists etc.)
 .claude/
